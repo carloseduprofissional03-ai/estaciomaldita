@@ -36,7 +36,7 @@ Dados persistidos + aprovação + contas de moderador exigem banco, autenticaç�
 - **Mapa**: `leaflet` + `react-leaflet` (novas dependências) com tiles OpenStreetMap — gratuito, sem chave de API. Marcadores por `L.divIcon` colorido por categoria.
 - **Gráficos** de impacto: `recharts` (já instalado).
 - **Backend**: Enter Cloud — Supabase client (já existe `@supabase/supabase-js`), tabelas + RLS, Storage para fotos, 1 função de backend para criar moderadores com código de convite.
-- **Design system**: identidade costeira definida pelo usuário — **azul, verde e branco** (água/estuário + mangue + fundos claros) — via tokens no `index.css` + `tailwind.config.ts`; linguagem de layout editorial do site de referência (hero com foto + CTA, faixa de declaração, grade de números, seções centradas). Componentes shadcn já disponíveis — reutilizar (button, card, badge, dialog, sheet, form, input, textarea, select, tabs, skeleton, sonner/toast etc.).
+- **Design system**: identidade costeira definida pelo usuário — **azul, verde e branco** como base (água/estuário + mangue + fundos claros), com liberdade para **cores de apoio complementares** (ex.: tom quente de areia/âmbar em CTAs e destaques, e cores semânticas para situação das denúncias no mapa) — via tokens no `index.css` + `tailwind.config.ts`; linguagem de layout editorial do site de referência (hero com foto + CTA, faixa de declaração, grade de números, seções centradas). Componentes shadcn já disponíveis — reutilizar (button, card, badge, dialog, sheet, form, input, textarea, select, tabs, skeleton, sonner/toast etc.).
 
 ## Modelo de dados (Enter Cloud)
 
