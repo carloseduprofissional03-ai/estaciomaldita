@@ -1,6 +1,6 @@
-// Imagens de demonstração (geradas para o projeto).
+// Imagens do projeto. Hero: foto real da comunidade da Ilha de Deus (Recife).
 export const IMG = {
-  hero: "https://cdn.enter.pro/resources/uid_100510955/recifesvivos-hero_f49941f8.png",
+  hero: "https://cdn.enter.pro/visual_resources/100510955/0280e1cfb4c54ca283f7906b22d2ea15/555d4a09.jpeg",
   mutirao:
     "https://cdn.enter.pro/resources/uid_100510955/recifesvivos-mutirao_651b2732.png",
   mangue:
