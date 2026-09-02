@@ -27,6 +27,7 @@ export interface CleanupEvent {
   startTime: string; // HH:mm
   endTime: string;
   volunteersTarget?: number;
+  signupCount: number;
   proposerName: string;
   proposerContact?: string;
   status: EventStatus;
@@ -66,7 +67,6 @@ export interface GalleryPhoto {
 export interface AppDB {
   reports: Report[];
   events: CleanupEvent[];
-  signups: EventSignup[];
   news: NewsItem[];
   photos: GalleryPhoto[];
 }

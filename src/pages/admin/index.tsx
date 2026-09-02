@@ -1,22 +1,29 @@
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import {
   Camera,
   CheckCircle2,
   ClipboardCheck,
   FilePlus2,
   Info,
+  Loader2,
   Lock,
   LogOut,
   MapPin,
   Megaphone,
   Recycle,
-  RotateCcw,
   ShieldCheck,
   Trash2,
   X,
 } from "lucide-react";
 import { useData } from "@/components/data-provider";
-import { getAdminSession, loginAdmin, logoutAdmin } from "@/lib/auth";
+import {
+  getSessionUser,
+  isAdminUser,
+  registerModerator,
+  signIn,
+  signOut,
+  subscribeAuth,
+} from "@/lib/auth";
 import { SITE } from "@/lib/site";
 import { getCategory } from "@/lib/categories";
 import { fmtShort, isUpcoming, todayISO } from "@/lib/format";
@@ -33,37 +40,132 @@ type ContentBundle = {
   photos: GalleryPhoto[];
 };
 
+type AuthState = "loading" | "none" | "denied" | "admin";
+
 export default function Admin() {
-  const [authed, setAuthed] = useState(getAdminSession());
-  return (
-    <div className="min-h-screen bg-foam">
-      {authed ? (
-        <Dashboard
-          onLogout={() => {
-            logoutAdmin();
-            setAuthed(false);
-          }}
-        />
-      ) : (
-        <Login onLogin={() => setAuthed(true)} />
-      )}
-    </div>
-  );
+  const [auth, setAuth] = useState<AuthState>("loading");
+
+  useEffect(() => {
+    let mounted = true;
+    const apply = async (userId: string | null) => {
+      if (!userId) {
+        if (mounted) setAuth("none");
+        return;
+      }
+      const ok = await isAdminUser(userId);
+      if (mounted) setAuth(ok ? "admin" : "denied");
+    };
+    void getSessionUser().then(({ id }) => {
+      if (mounted) void apply(id);
+    });
+    const unsub = subscribeAuth((id) => {
+      void apply(id);
+    });
+    return () => {
+      mounted = false;
+      unsub();
+    };
+  }, []);
+
+  if (auth === "loading") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-foam">
+        <Loader2 className="h-7 w-7 animate-spin text-lagoon" />
+      </div>
+    );
+  }
+
+  if (auth === "admin") {
+    return (
+      <Dashboard
+        onLogout={async () => {
+          await signOut();
+          setAuth("none");
+        }}
+      />
+    );
+  }
+
+  if (auth === "denied") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-foam px-4">
+        <div className="w-full max-w-md rounded-3xl border border-border/70 bg-card p-8 text-center shadow-card">
+          <ShieldCheck className="mx-auto h-10 w-10 text-lagoon" />
+          <h1 className="mt-4 font-display text-2xl font-semibold text-primary">
+            Acesso restrito
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Esta área é exclusiva para moderadores da equipe de {SITE.name}.
+          </p>
+          <Button variant="outline" className="mt-5" onClick={() => void signOut()}>
+            <LogOut className="h-4 w-4" />
+            Sair e tentar outra conta
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return <Login onLogin={() => setAuth("admin")} />;
 }
 
-/* ---------- LOGIN (demonstração) ---------- */
+/* ---------- LOGIN / REGISTRO (autenticação real + código de convite) ---------- */
 
 function Login({ onLogin }: { onLogin: () => void }) {
+  const [mode, setMode] = useState<"entrar" | "registrar">("entrar");
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  function submit(e: FormEvent) {
+  async function submit(e: FormEvent) {
     e.preventDefault();
-    if (loginAdmin(email, password)) {
-      onLogin();
+    setError(null);
+    if (mode === "registrar") {
+      if (fullName.trim().length < 3)
+        return setError("Informe seu nome completo.");
+      if (!/^\S+@\S+\.\S+$/.test(email))
+        return setError("Informe um e-mail válido.");
+      if (password.length < 8)
+        return setError("A senha precisa ter ao menos 8 caracteres.");
+      if (!inviteCode.trim())
+        return setError("Digite o código de convite da equipe.");
     } else {
-      setError("E-mail ou senha incorretos para a demonstração.");
+      if (!/^\S+@\S+\.\S+$/.test(email))
+        return setError("Informe um e-mail válido.");
+      if (!password) return setError("Digite sua senha.");
+    }
+
+    setBusy(true);
+    try {
+      if (mode === "registrar") {
+        const reg = await registerModerator({
+          full_name: fullName.trim(),
+          email,
+          password,
+          invite_code: inviteCode.trim(),
+        });
+        if (!reg.ok) {
+          setError(reg.error ?? "Não foi possível registrar.");
+          setBusy(false);
+          return;
+        }
+      }
+      const res = await signIn(email, password);
+      if (res.error) {
+        setError(
+          mode === "registrar"
+            ? "Conta criada, mas não foi possível entrar agora. Faça login."
+            : res.error,
+        );
+        setBusy(false);
+        return;
+      }
+      onLogin();
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -82,11 +184,50 @@ function Login({ onLogin }: { onLogin: () => void }) {
           </p>
         </div>
 
+        <div className="flex rounded-full bg-secondary p-1 text-sm font-semibold">
+          <button
+            type="button"
+            onClick={() => setMode("entrar")}
+            className={`flex-1 rounded-full px-4 py-2 transition ${
+              mode === "entrar"
+                ? "bg-card text-primary shadow-sm"
+                : "text-muted-foreground hover:text-primary"
+            }`}
+          >
+            Entrar
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("registrar")}
+            className={`flex-1 rounded-full px-4 py-2 transition ${
+              mode === "registrar"
+                ? "bg-card text-primary shadow-sm"
+                : "text-muted-foreground hover:text-primary"
+            }`}
+          >
+            Registrar (convite)
+          </button>
+        </div>
+
         <form
           onSubmit={submit}
-          className="rounded-3xl border border-border/70 bg-card p-6 shadow-card sm:p-8"
+          className="mt-4 rounded-3xl border border-border/70 bg-card p-6 shadow-card sm:p-8"
         >
-          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {mode === "registrar" && (
+            <>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Nome completo
+              </label>
+              <input
+                className="field mt-1.5"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Seu nome"
+                autoComplete="name"
+              />
+            </>
+          )}
+          <label className="mt-4 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             E-mail
           </label>
           <input
@@ -95,6 +236,7 @@ function Login({ onLogin }: { onLogin: () => void }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="equipe@nascfz.org.br"
+            autoComplete="email"
           />
           <label className="mt-4 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Senha
@@ -105,27 +247,47 @@ function Login({ onLogin }: { onLogin: () => void }) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
+            autoComplete={mode === "registrar" ? "new-password" : "current-password"}
           />
+          {mode === "registrar" && (
+            <>
+              <label className="mt-4 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Código de convite
+              </label>
+              <input
+                className="field mt-1.5"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value)}
+                placeholder="Código secreto da equipe"
+                autoComplete="off"
+              />
+            </>
+          )}
           {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
-          <Button type="submit" variant="ocean" className="mt-5 w-full" size="lg">
+          <Button type="submit" variant="ocean" className="mt-5 w-full" size="lg" disabled={busy}>
             <Lock className="h-4 w-4" />
-            Entrar
+            {busy ? "Aguarde…" : mode === "entrar" ? "Entrar" : "Criar conta e entrar"}
           </Button>
         </form>
 
         <div className="mt-5 rounded-2xl border border-dashed border-border bg-card/70 p-4 text-xs leading-relaxed text-muted-foreground">
-          <p className="flex items-center gap-1.5 font-semibold text-primary">
-            <Info className="h-4 w-4 text-lagoon" />
-            Versão de demonstração
-          </p>
-          <p className="mt-1.5">
-            O login é simulado neste protótipo. Acesse com <b>e-mail:</b>{" "}
-            equipe@nascfz.org.br · <b>senha:</b> ilhadeus2026
-          </p>
-          <p className="mt-2">
-            Na versão com banco de dados, o acesso usa autenticação real e o
-            cadastro de moderadores exige código de convite.
-          </p>
+          {mode === "registrar" ? (
+            <p>
+              O <b>código de convite</b> é secreto e fica apenas com a equipe do
+              projeto. Quem o tiver pode criar uma conta de moderador.
+            </p>
+          ) : (
+            <p className="flex items-center gap-1.5 font-semibold text-primary">
+              <Info className="h-4 w-4 text-lagoon" />
+              Acesso com conta real
+            </p>
+          )}
+          {mode === "entrar" && (
+            <p className="mt-1.5">
+              Use a conta de moderador criada com o código de convite. Não é
+              possível criar conta sem o convite da equipe.
+            </p>
+          )}
         </div>
       </div>
     </div>
@@ -154,16 +316,6 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     photos: db.photos.filter((p) => p.status === "approved"),
   };
 
-  function resetDemo() {
-    if (
-      window.confirm(
-        "Restaurar os dados de demonstração? Suas alterações locais serão perdidas.",
-      )
-    ) {
-      actions.resetDemo();
-    }
-  }
-
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -182,10 +334,6 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={resetDemo}>
-            <RotateCcw className="h-4 w-4" />
-            Restaurar demo
-          </Button>
           <Button variant="destructive" size="sm" onClick={onLogout}>
             <LogOut className="h-4 w-4" />
             Sair

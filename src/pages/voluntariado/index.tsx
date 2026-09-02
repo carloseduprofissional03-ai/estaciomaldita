@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   Clock,
   HandHeart,
+  Loader2,
   MapPin,
   PartyPopper,
   Send,
@@ -26,8 +27,7 @@ export default function Voluntariado() {
     [db.events],
   );
 
-  const countFor = (eventId: string) =>
-    db.signups.filter((s) => s.eventId === eventId).length;
+  const countFor = (event: CleanupEvent) => event.signupCount ?? 0;
 
   return (
     <div>
@@ -62,7 +62,7 @@ export default function Voluntariado() {
               <EventCard
                 key={event.id}
                 event={event}
-                count={countFor(event.id)}
+                count={countFor(event)}
               />
             ))}
           </div>
@@ -84,26 +84,30 @@ function EventCard({ event, count }: { event: CleanupEvent; count: number }) {
   const [phone, setPhone] = useState("");
   const [msg, setMsg] = useState<{ type: "ok" | "erro"; text: string } | null>(null);
   const [done, setDone] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const dia = event.date.split("-");
   const full = Number(count) >= Number(event.volunteersTarget ?? Infinity);
 
-  function submit(e: FormEvent) {
+  async function submit(e: FormEvent) {
     e.preventDefault();
     setMsg(null);
     if (name.trim().length < 3) return setMsg({ type: "erro", text: "Informe seu nome." });
     if (!/^\S+@\S+\.\S+$/.test(email))
       return setMsg({ type: "erro", text: "Informe um e-mail válido." });
-    const res = actions.addSignup({
+    setBusy(true);
+    const res = await actions.addSignup({
       eventId: event.id,
       name: name.trim(),
       email: email.trim(),
       phone: phone.trim() || undefined,
     });
+    setBusy(false);
     if (!res.ok) {
       setMsg({ type: "erro", text: res.message ?? "Não foi possível inscrever." });
       return;
     }
+    setMsg(null);
     setDone(true);
   }
 
@@ -180,9 +184,9 @@ function EventCard({ event, count }: { event: CleanupEvent; count: number }) {
             </p>
           )}
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Button type="submit" variant="leaf">
-              <Send className="h-4 w-4" />
-              Confirmar inscrição
+            <Button type="submit" variant="leaf" disabled={busy}>
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              {busy ? "Enviando…" : "Confirmar inscrição"}
             </Button>
             <p className="text-xs text-muted-foreground">
               Usaremos seus dados apenas para avisar sobre o mutirão.

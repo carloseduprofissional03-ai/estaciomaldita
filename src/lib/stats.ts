@@ -32,11 +32,9 @@ export function computeStats(db: AppDB): SiteStats {
   const resolvidas = approved.filter((r) => r.resolved);
   const abertas = approved.filter((r) => !r.resolved);
   const mutiroes = db.events.filter((e) => e.status === "approved").length;
-  const approvedEventIds = new Set(
-    db.events.filter((e) => e.status === "approved").map((e) => e.id),
-  );
-  const voluntarios = db.signups.filter((s) => approvedEventIds.has(s.eventId))
-    .length;
+  const voluntarios = db.events
+    .filter((e) => e.status === "approved")
+    .reduce((acc, e) => acc + (e.signupCount ?? 0), 0);
 
   const catMap = new Map<string, CategorySlice>();
   for (const r of approved) {

@@ -7,10 +7,3 @@ export const SITE = {
   pilot: "Piloto: Ilha de Deus, Recife (PE)",
   adminEmail: "equipe@nascfz.org.br",
 };
-
-// Credenciais da DEMO (somente demonstração — na versão com backend,
-// o acesso será feito com autenticação real e código de convite).
-export const DEMO_CREDENTIALS = {
-  email: "equipe@nascfz.org.br",
-  password: "ilhadeus2026",
-};

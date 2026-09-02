@@ -1,23 +1,72 @@
-import { DEMO_CREDENTIALS } from "./site";
+import { supabase } from "@/integrations/supabase/client";
 
-const KEY = "nascfz-admin";
+/*
+ * Autenticação real (Enter Cloud) da Área da equipe.
+ * O cadastro de moderadores exige o código de convite (validado na função
+ * de backend register-admin) — não há cadastro público.
+ */
 
-// Autenticação de DEMONSTRAÇÃO: nesta versão sem backend, o acesso da equipe
-// é validado localmente. Na versão com Enter Cloud, este módulo é substituído
-// pela autenticação real (e-mail/senha + código de convite).
-
-export function getAdminSession(): boolean {
-  return localStorage.getItem(KEY) === "1";
+export function subscribeAuth(cb: (userId: string | null) => void): () => void {
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange((_event, session) => {
+    cb(session?.user?.id ?? null);
+  });
+  return () => subscription.unsubscribe();
 }
 
-export function loginAdmin(email: string, password: string): boolean {
-  const ok =
-    email.trim().toLowerCase() === DEMO_CREDENTIALS.email &&
-    password === DEMO_CREDENTIALS.password;
-  if (ok) localStorage.setItem(KEY, "1");
-  return ok;
+export async function getSessionUser(): Promise<{
+  id: string | null;
+  email: string | null;
+}> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return { id: user?.id ?? null, email: user?.email ?? null };
 }
 
-export function logoutAdmin(): void {
-  localStorage.removeItem(KEY);
+export async function isAdminUser(userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .maybeSingle();
+  return data?.role === "admin";
+}
+
+export async function signIn(
+  email: string,
+  password: string,
+): Promise<{ error?: string }> {
+  const { error } = await supabase.auth.signInWithPassword({
+    email: email.trim().toLowerCase(),
+    password,
+  });
+  if (error) {
+    return { error: "E-mail ou senha incorretos." };
+  }
+  return {};
+}
+
+export async function signOut(): Promise<void> {
+  await supabase.auth.signOut();
+}
+
+export async function registerModerator(input: {
+  full_name: string;
+  email: string;
+  password: string;
+  invite_code: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  const { data, error } = await supabase.functions.invoke("register-admin", {
+    body: input,
+  });
+  if (error) {
+    return { ok: false, error: "Não foi possível contatar o servidor." };
+  }
+  const body = data as { ok?: boolean; error?: string };
+  if (!body?.ok) {
+    return { ok: false, error: body?.error ?? "Não foi possível registrar." };
+  }
+  return { ok: true };
 }

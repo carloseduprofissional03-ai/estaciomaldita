@@ -1,9 +1,14 @@
 import { useRef, useState } from "react";
 import { ImagePlus, Loader2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
-// Reduz a imagem para caber no armazenamento local da demonstração.
-function compressImage(file: File, maxDim = 1200, quality = 0.8): Promise<string> {
+// Reduz a imagem e devolve como Blob para envio ao armazenamento da nuvem.
+function compressToBlob(
+  file: File,
+  maxDim = 1200,
+  quality = 0.82,
+): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
@@ -18,11 +23,18 @@ function compressImage(file: File, maxDim = 1200, quality = 0.8): Promise<string
         const ctx = canvas.getContext("2d");
         if (!ctx) throw new Error("canvas");
         ctx.drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL("image/jpeg", quality));
+        canvas.toBlob(
+          (blob) => {
+            URL.revokeObjectURL(url);
+            if (blob) resolve(blob);
+            else reject(new Error("Não foi possível comprimir a imagem."));
+          },
+          "image/jpeg",
+          quality,
+        );
       } catch (err) {
-        reject(err as Error);
-      } finally {
         URL.revokeObjectURL(url);
+        reject(err as Error);
       }
     };
     img.onerror = () => {
@@ -33,6 +45,19 @@ function compressImage(file: File, maxDim = 1200, quality = 0.8): Promise<string
   });
 }
 
+async function uploadPhoto(blob: Blob): Promise<string> {
+  const ext = "jpg";
+  const path = `uploads/${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage
+    .from("nascfz")
+    .upload(path, blob, { contentType: blob.type });
+  if (error) {
+    throw new Error("Não foi possível enviar a imagem. Tente novamente.");
+  }
+  const { data } = supabase.storage.from("nascfz").getPublicUrl(path);
+  return data.publicUrl;
+}
+
 export function ImageUpload({
   value,
   onChange,
@@ -40,7 +65,7 @@ export function ImageUpload({
   className,
 }: {
   value?: string;
-  onChange: (dataUrl: string) => void;
+  onChange: (url: string) => void;
   label?: string;
   className?: string;
 }) {
@@ -56,11 +81,9 @@ export function ImageUpload({
       if (!file.type.startsWith("image/")) {
         throw new Error("Envie um arquivo de imagem (JPG, PNG…)");
       }
-      const dataUrl = await compressImage(file);
-      if (dataUrl.length > 4_500_000) {
-        throw new Error("Imagem muito grande. Escolha uma foto menor.");
-      }
-      onChange(dataUrl);
+      const blob = await compressToBlob(file);
+      const publicUrl = await uploadPhoto(blob);
+      onChange(publicUrl);
     } catch (err) {
       setError((err as Error).message || "Não foi possível carregar a imagem.");
     } finally {
@@ -111,7 +134,9 @@ export function ImageUpload({
             <ImagePlus className="h-6 w-6" />
           )}
           <span className="px-4 text-center text-xs">
-            {label ?? "Adicionar uma foto (opcional)"}
+            {busy
+              ? "Enviando foto…"
+              : (label ?? "Adicionar uma foto (opcional)")}
           </span>
         </button>
       )}
