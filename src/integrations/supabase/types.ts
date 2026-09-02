@@ -3360,13 +3360,387 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      cleanup_events: {
+        Row: {
+          created_at: string
+          date: string
+          description: string
+          end_time: string
+          id: string
+          location_name: string
+          proposer_contact: string | null
+          proposer_name: string
+          signup_count: number
+          start_time: string
+          status: string
+          title: string
+          volunteers_target: number | null
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          description: string
+          end_time: string
+          id?: string
+          location_name: string
+          proposer_contact?: string | null
+          proposer_name: string
+          signup_count?: number
+          start_time: string
+          status?: string
+          title: string
+          volunteers_target?: number | null
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          description?: string
+          end_time?: string
+          id?: string
+          location_name?: string
+          proposer_contact?: string | null
+          proposer_name?: string
+          signup_count?: number
+          start_time?: string
+          status?: string
+          title?: string
+          volunteers_target?: number | null
+        }
+        Relationships: []
+      }
+      event_signups: {
+        Row: {
+          created_at: string
+          email: string
+          event_id: string
+          id: string
+          name: string
+          phone: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          event_id: string
+          id?: string
+          name: string
+          phone?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          event_id?: string
+          id?: string
+          name?: string
+          phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_signups_event_id_fkey"
+            columns: ["event_id"]
+            referencedRelation: "approved_cleanup_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_signups_event_id_fkey"
+            columns: ["event_id"]
+            referencedRelation: "cleanup_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gallery_photos: {
+        Row: {
+          author: string
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string
+          status: string
+          title: string
+        }
+        Insert: {
+          author: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url: string
+          status?: string
+          title: string
+        }
+        Update: {
+          author?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      news: {
+        Row: {
+          author: string
+          body: string
+          cover_url: string | null
+          created_at: string
+          id: string
+          status: string
+          summary: string
+          title: string
+        }
+        Insert: {
+          author: string
+          body: string
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          status?: string
+          summary: string
+          title: string
+        }
+        Update: {
+          author?: string
+          body?: string
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          status?: string
+          summary?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          role: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string
+          id: string
+          role?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          role?: string
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          category: string
+          contact: string | null
+          created_at: string
+          description: string
+          id: string
+          lat: number
+          lng: number
+          photo_url: string | null
+          reference: string
+          resolution_note: string | null
+          resolved: boolean
+          status: string
+          title: string
+        }
+        Insert: {
+          category: string
+          contact?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          lat: number
+          lng: number
+          photo_url?: string | null
+          reference: string
+          resolution_note?: string | null
+          resolved?: boolean
+          status?: string
+          title: string
+        }
+        Update: {
+          category?: string
+          contact?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          lat?: number
+          lng?: number
+          photo_url?: string | null
+          reference?: string
+          resolution_note?: string | null
+          resolved?: boolean
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      approved_cleanup_events: {
+        Row: {
+          created_at: string | null
+          date: string | null
+          description: string | null
+          end_time: string | null
+          id: string | null
+          location_name: string | null
+          proposer_name: string | null
+          signup_count: number | null
+          start_time: string | null
+          status: string | null
+          title: string | null
+          volunteers_target: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          date?: string | null
+          description?: string | null
+          end_time?: string | null
+          id?: string | null
+          location_name?: string | null
+          proposer_name?: string | null
+          signup_count?: number | null
+          start_time?: string | null
+          status?: string | null
+          title?: string | null
+          volunteers_target?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          date?: string | null
+          description?: string | null
+          end_time?: string | null
+          id?: string | null
+          location_name?: string | null
+          proposer_name?: string | null
+          signup_count?: number | null
+          start_time?: string | null
+          status?: string | null
+          title?: string | null
+          volunteers_target?: number | null
+        }
+        Relationships: []
+      }
+      approved_gallery_photos: {
+        Row: {
+          author: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          image_url: string | null
+          status: string | null
+          title: string | null
+        }
+        Insert: {
+          author?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          image_url?: string | null
+          status?: string | null
+          title?: string | null
+        }
+        Update: {
+          author?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          image_url?: string | null
+          status?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
+      approved_news: {
+        Row: {
+          author: string | null
+          body: string | null
+          cover_url: string | null
+          created_at: string | null
+          id: string | null
+          status: string | null
+          summary: string | null
+          title: string | null
+        }
+        Insert: {
+          author?: string | null
+          body?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          id?: string | null
+          status?: string | null
+          summary?: string | null
+          title?: string | null
+        }
+        Update: {
+          author?: string | null
+          body?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          id?: string | null
+          status?: string | null
+          summary?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
+      approved_reports: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          lat: number | null
+          lng: number | null
+          photo_url: string | null
+          reference: string | null
+          resolution_note: string | null
+          resolved: boolean | null
+          status: string | null
+          title: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          lat?: number | null
+          lng?: number | null
+          photo_url?: string | null
+          reference?: string | null
+          resolution_note?: string | null
+          resolved?: boolean | null
+          status?: string | null
+          title?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          lat?: number | null
+          lng?: number | null
+          photo_url?: string | null
+          reference?: string | null
+          resolution_note?: string | null
+          resolved?: boolean | null
+          status?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
