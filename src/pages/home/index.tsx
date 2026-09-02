@@ -107,41 +107,45 @@ export default function Home() {
   return (
     <div>
       {/* HERO */}
-      <section className="relative isolate overflow-hidden">
-        <img
-          src={IMG.hero}
-          alt="Vista aérea da Ilha de Deus cercada de mangue e rios"
-          className="absolute inset-0 h-full w-full object-cover"
-          crossOrigin="anonymous"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/80 via-primary/40 to-primary/85" />
-        <div className="relative mx-auto flex w-full max-w-7xl flex-col items-center px-4 py-24 text-center text-white sm:px-6 lg:py-32">
-          <span className="animate-rise inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-xs font-medium backdrop-blur-sm">
-            <Droplets className="h-3.5 w-3.5" />
-            {`Piloto: Ilha de Deus, Recife (PE)`}
+      <section className="bg-gradient-to-b from-foam to-background">
+        <div className="mx-auto w-full max-w-7xl px-4 pt-16 text-center sm:px-6 lg:pt-24">
+          <span className="animate-rise inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-xs font-semibold text-primary shadow-sm">
+            <Droplets className="h-3.5 w-3.5 text-lagoon" />
+            Piloto: Ilha de Deus, Recife (PE)
           </span>
-          <h1 className="animate-rise animate-rise-1 mt-7 max-w-4xl text-balance font-display text-4xl font-semibold leading-[1.08] sm:text-5xl lg:text-6xl">
-            Parece pequeno hoje.
-            <br />
-            <em className="font-normal italic text-white/85">
-              É a nascente de algo maior.
-            </em>
+          <h1 className="animate-rise animate-rise-1 mx-auto mt-6 max-w-4xl text-balance font-display text-4xl font-extrabold leading-[1.1] tracking-tight text-primary sm:text-5xl lg:text-6xl">
+            Parece pequeno hoje.{" "}
+            <span className="text-lagoon">É a nascente de algo maior.</span>
           </h1>
-          <p className="animate-rise animate-rise-2 mt-6 max-w-2xl text-pretty text-base leading-relaxed text-white/80 sm:text-lg">
+          <p className="animate-rise animate-rise-2 mx-auto mt-5 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
             Um projeto de fiscalização ambiental comunitária que une uma
             comunidade de mangue à preservação dos sistemas costeiros do Recife
             — da nascente à foz, quem cuida é quem mora.
           </p>
-          <div className="animate-rise animate-rise-3 mt-9 flex flex-wrap items-center justify-center gap-3">
+          <div className="animate-rise animate-rise-3 mt-8 flex flex-wrap items-center justify-center gap-3">
             <Button asChild variant="leaf" size="lg">
               <Link to="/mapa">
                 <MapPin className="h-4 w-4" />
                 Acesse o mapa!
               </Link>
             </Button>
-            <Button asChild variant="outlineLight" size="lg">
+            <Button asChild variant="outline" size="lg">
               <Link to="/voluntariado">Quero ser voluntário</Link>
             </Button>
+          </div>
+        </div>
+        <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:pb-20">
+          <div className="animate-rise animate-rise-4 relative mt-12 overflow-hidden rounded-[2rem] border border-border/60 shadow-soft">
+            <img
+              src={IMG.hero}
+              alt="Vista aérea da Ilha de Deus cercada de mangue e rios"
+              className="h-[280px] w-full object-cover sm:h-[400px]"
+              crossOrigin="anonymous"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-primary/50 via-transparent to-transparent" />
+            <p className="absolute bottom-4 left-4 rounded-full bg-white/90 px-3.5 py-1.5 text-xs font-semibold text-primary shadow-sm backdrop-blur">
+              Vista aérea da Ilha de Deus · mangue e rio
+            </p>
           </div>
         </div>
       </section>
@@ -297,7 +301,7 @@ export default function Home() {
                 key={s.step}
                 className="group relative rounded-2xl border border-border/70 bg-card p-6 shadow-card transition hover:-translate-y-1"
               >
-                <span className="absolute right-5 top-5 font-display text-5xl font-semibold text-secondary-foreground/15">
+                <span className="absolute right-5 top-4 font-display text-4xl font-bold text-primary/10">
                   {s.step}
                 </span>
                 <span className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-lagoon to-leaf text-white shadow-leaf transition group-hover:scale-110">
@@ -327,36 +331,40 @@ export default function Home() {
       </section>
 
       {/* CTA MAPA */}
-      <section className="relative isolate overflow-hidden">
-        <img
-          src={IMG.mangue}
-          alt="Manguezal ao entardecer"
-          className="absolute inset-0 h-full w-full object-cover"
-          crossOrigin="anonymous"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/85 to-primary/60" />
-        <div className="relative mx-auto flex w-full max-w-7xl flex-col items-start px-4 py-20 text-white sm:px-6 lg:py-28">
-          <p className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-xs font-medium backdrop-blur-sm">
-            <MapPin className="h-3.5 w-3.5" />
-            Mapa comunitário
-          </p>
-          <h2 className="mt-6 max-w-2xl text-balance font-display text-3xl font-semibold leading-tight sm:text-5xl">
-            Veja o que a comunidade já registrou no território
-          </h2>
-          <p className="mt-4 max-w-xl text-white/80">
-            Cada ponto publicado foi verificado antes de vir a público. Explore
-            as ocorrências por categoria e acompanhe o que já foi resolvido.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Button asChild variant="leaf" size="lg">
-              <Link to="/mapa">
-                <MapPin className="h-4 w-4" />
-                Acesse o mapa!
-              </Link>
-            </Button>
-            <Button asChild variant="outlineLight" size="lg">
-              <Link to="/impacto">Acompanhar impacto</Link>
-            </Button>
+      <section className="bg-background">
+        <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:py-20">
+          <div className="grid items-center gap-8 rounded-[2rem] border border-border/70 bg-ocean-soft p-8 shadow-card lg:grid-cols-[1.25fr_0.75fr] lg:p-12">
+            <div>
+              <p className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-primary shadow-sm">
+                <MapPin className="h-3.5 w-3.5 text-lagoon" />
+                Mapa comunitário
+              </p>
+              <h2 className="mt-5 max-w-2xl text-balance font-display text-3xl font-extrabold leading-tight tracking-tight text-primary sm:text-4xl">
+                Veja o que a comunidade já registrou no território
+              </h2>
+              <p className="mt-3 max-w-xl text-muted-foreground">
+                Cada ponto publicado foi verificado antes de vir a público.
+                Explore as ocorrências por categoria e acompanhe o que já foi
+                resolvido.
+              </p>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <Button asChild variant="leaf" size="lg">
+                  <Link to="/mapa">
+                    <MapPin className="h-4 w-4" />
+                    Acesse o mapa!
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link to="/impacto">Acompanhar impacto</Link>
+                </Button>
+              </div>
+            </div>
+            <img
+              src={IMG.fauna}
+              alt="Guará, ave símbolo dos manguezais"
+              className="h-60 w-full rounded-2xl object-cover shadow-card sm:h-72"
+              crossOrigin="anonymous"
+            />
           </div>
         </div>
       </section>

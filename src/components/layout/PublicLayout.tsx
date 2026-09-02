@@ -109,19 +109,19 @@ export function PublicLayout() {
         <Outlet />
       </main>
 
-      <footer className="bg-primary text-primary-foreground">
+      <footer className="border-t border-border/70 bg-background">
         <div className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6">
           <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
             <div>
               <div className="flex items-center gap-2.5">
-                <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/10">
+                <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-lagoon to-leaf text-white">
                   <Droplets className="h-5 w-5" />
                 </span>
-                <span className="font-display text-lg font-semibold">
+                <span className="font-display text-lg font-bold tracking-tight text-primary">
                   {SITE.name}
                 </span>
               </div>
-              <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/70">
+              <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
                 Um projeto de extensão que nasce pequeno — numa comunidade numa
                 ilha de mangue — e aponta para uma mudança maior: a preservação
                 dos sistemas costeiros do Recife.
@@ -129,48 +129,48 @@ export function PublicLayout() {
             </div>
 
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
                 Navegue
               </p>
-              <ul className="mt-4 space-y-2.5 text-sm text-white/80">
-                <li><Link className="transition hover:text-white" to="/mapa">Mapa de denúncias</Link></li>
-                <li><Link className="transition hover:text-white" to="/denuncias">Como denunciar</Link></li>
-                <li><Link className="transition hover:text-white" to="/voluntariado">Voluntariado</Link></li>
-                <li><Link className="transition hover:text-white" to="/impacto">Impacto e relatórios</Link></li>
+              <ul className="mt-4 space-y-2.5 text-sm text-foreground/75">
+                <li><Link className="transition hover:text-primary" to="/mapa">Mapa de denúncias</Link></li>
+                <li><Link className="transition hover:text-primary" to="/denuncias">Como denunciar</Link></li>
+                <li><Link className="transition hover:text-primary" to="/voluntariado">Voluntariado</Link></li>
+                <li><Link className="transition hover:text-primary" to="/impacto">Impacto e relatórios</Link></li>
               </ul>
             </div>
 
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
                 Participe
               </p>
-              <ul className="mt-4 space-y-2.5 text-sm text-white/80">
-                <li><Link className="transition hover:text-white" to="/denunciar">Fazer uma denúncia</Link></li>
-                <li><Link className="transition hover:text-white" to="/voluntariado">Propor um mutirão</Link></li>
-                <li><Link className="transition hover:text-white" to="/galeria">Enviar uma foto</Link></li>
-                <li><Link className="transition hover:text-white" to="/noticias">Acompanhar notícias</Link></li>
+              <ul className="mt-4 space-y-2.5 text-sm text-foreground/75">
+                <li><Link className="transition hover:text-primary" to="/denunciar">Fazer uma denúncia</Link></li>
+                <li><Link className="transition hover:text-primary" to="/voluntariado">Propor um mutirão</Link></li>
+                <li><Link className="transition hover:text-primary" to="/galeria">Enviar uma foto</Link></li>
+                <li><Link className="transition hover:text-primary" to="/noticias">Acompanhar notícias</Link></li>
               </ul>
             </div>
 
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
                 O projeto
               </p>
-              <p className="mt-4 text-sm leading-relaxed text-white/70">
+              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
                 {SITE.pilot}. Comunidade, universidade e cidadania trabalhando
                 pela justiça ambiental.
               </p>
             </div>
           </div>
 
-          <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/60 sm:flex-row">
+          <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border/70 pt-6 text-xs text-muted-foreground sm:flex-row">
             <p>
               © {new Date().getFullYear()} {SITE.name} — feito pela comunidade
               e para a comunidade.
             </p>
             <Link
               to="/admin"
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-3 py-1.5 transition hover:border-white/40 hover:text-white"
+              className="inline-flex items-center gap-1.5 rounded-full border border-input bg-card px-3.5 py-1.5 font-semibold text-primary transition hover:bg-ocean-soft"
             >
               <ShieldCheck className="h-3.5 w-3.5" />
               Área da equipe
