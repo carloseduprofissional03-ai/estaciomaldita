@@ -1,125 +1,90 @@
-# Plataforma de Fiscalização Ambiental Comunitária — Piloto Ilha de Deus (Recife)
+# Fase 2 — Dados na nuvem (Enter Cloud) — Plataforma "Da Nascente à Foz"
 
 ## Contexto
 
-O usuário é estudante em uma disciplina de extensão (tema social e ambiental) e quer criar um **site** que sirva como ferramenta de resultados e de ação para a Ilha de Deus (Recife/PE) — comunidade em área de mangue/sistema estuarino. O site é público e navegável no navegador, para a comunidade, universidade e poder público.
+O site comunitário de fiscalização ambiental da Ilha de Deus (Recife) está pronto, com o design claro aprovado e publicado como **demo**: todos os dados vivem em `localStorage` (via `DataProvider` + seed) e o login da equipe é simulado com credenciais fixas.
 
-A visão é maior que a Ilha de Deus: o projeto é um **protótipo de preservação dos sistemas costeiros do Recife**, com a comunidade como protagonista de uma "fiscalização comunitária" que (1) engaja voluntários, (2) dá visibilidade ao que acontece no território e (3) registra/demanda o papel do poder público no combate ao descarte irregular e na garantia de um meio ambiente justo. O site é um piloto demonstrável e replicável para outras regiões e bairros.
+O usuário assinou o **plano Basic**, ativou o **Enter Cloud** e quer a versão com **banco de dados real na nuvem**: denúncias, mutirões, notícias e fotos enviadas por qualquer visitante passam a ser guardadas de verdade e moderadas pela equipe (conteúdo só vira público após aprovação). A interface visual **não muda**.
 
-### Referência de produto: De Olho na Guanabara (deolhonaguanabara.com.br)
-O usuário pediu para usar o "De Olho na Guanabara" como base. Trata-se de um portal de fiscalização socioambiental de comunidades (pescadores da Baía de Guanabara) cujo padrão vamos espelhar:
+Decisões confirmadas com o usuário:
+- Moderação por **código de convite**: quem tem o código secreto cria a conta de moderador (nome + e-mail + senha). Vários moderadores podem ser criados depois.
+- Primeiro moderador: e-mail `equipe@nascfz.org.br`.
+- Conteúdo demo atual (denúncias, mutirões, notícias, fotos, inscrições) vira o conteúdo inicial real do banco.
+- Denúncias seguem anônimas (contato opcional e nunca público); voluntários continuam se inscrevendo sem conta.
 
-- **Mapa como peça central**: CTA principal "Acesse o mapa!" e o mapa interativo como ferramenta-coração do projeto.
-- **Home editorial**: narrativa em seções que explicam o valor do território, o propósito do projeto, quem alimenta, como o fluxo de denúncia funciona (verificação antes de publicar) e para onde as denúncias são encaminhadas.
-- **Credibilidade**: todo ponto publicado foi **verificado antes de virar público**; origem de dados institucionais explícita.
-- **Proteção ao denunciante**: aviso "IMPORTANTE" afirmando que dados de quem denuncia são protegidos e nunca publicados.
-- **Institucional**: seção de realização, parceiros e apoios + rodapé com créditos.
-- **Layout**: cabeçalho branco com logo ao centro e navegação; hero com foto de fundo e botão CTA em destaque; faixa de declaração em cor forte; grade de cards de números; seções alternando texto centralizado. Vamos manter essa linguagem de comunicação (título forte, texto centralizado, seções claras) mas com **paleta própria definida pelo usuário: azul + verde + branco** (tons costeiros — água, estuário e mangue) — sem copiar a marca do site de referência.
-- **Direção de design/comunicação (definida pelo usuário)**: visual **moderno e atual, porém simples — sem complicar o site** (navegação enxuta, hierarquia clara, sem excesso de elementos). A aba **Início é a principal**: nela ficam as informações sobre o projeto e os **dados da comunidade** (em cards/números), no estilo editorial do site de referência. A mensagem que deve ficar clara para quem visita: trata-se de um **projeto que parece pequeno hoje (um piloto na Ilha de Deus), mas com impacto maior e de longo prazo** sobre os sistemas costeiros do Recife — despertando a ideia de escala/replicabilidade.
+## Arquitetura
 
-### Decisões confirmadas com o usuário
-1. **É um site público** (não um aplicativo): páginas no navegador para todos; a única exceção é a **área de moderação escondida** (`/admin`, com login só para a equipe) usada para aprovar o que a comunidade envia.
-2. **Idioma**: somente Português (pt-BR) — remover a maquinaria de i18n do template e escrever conteúdo direto em pt-BR.
-3. **Denúncias**: anônimas, com contato **opcional** (baixa barreira) — e com aviso de proteção ao denunciante, no espírito do site de referência.
-4. **Voluntariado**: voluntários **propõem** mutirões com data/hora; um moderador **aprova antes de publicar**.
-5. **Conteúdo demo**: incluir exemplos realistas (marcadores no mapa, mutirões, notícias, fotos) para apresentação na disciplina.
-6. **Moderação**: todo conteúdo vindo da comunidade (denúncias, mutirões, notícias, fotos) nasce como `pending` e só aparece publicamente após aprovação — verificação antes de publicar, como no site de referência.
-7. **Marca provisória**: *Recifes Vivos* — "Comunidade na defesa dos sistemas costeiros do Recife", piloto na Ilha de Deus. Alternativas abertas à revisão: "Costas Vivas do Recife", "Guardiões do Mangue". Centralizada em um único local de fácil troca.
+### 1. Banco de dados (1 migration única via `supabase_migration`)
 
-## Backend (necessário — Enter Cloud)
+Tabelas espelhando o modelo atual (`src/lib/types.ts`), com colunas `snake_case`:
+- `profiles` — `id uuid PK FK auth.users`, `full_name text`, `role text` (`user`|`admin`), `created_at`. RLS: cada usuário lê/atualiza o próprio perfil.
+- `reports` — `id text PK default gen_random_uuid()::text`, `category`, `title`, `description`, `reference`, `lat float8`, `lng float8`, `photo_url`, `contact` (nunca público), `status`, `resolved bool default false`, `resolution_note`, `created_at`.
+- `cleanup_events` — como o modelo atual + `signup_count int not null default 0` (contador público; e-mails de inscritos nunca expostos).
+- `event_signups` — `id`, `event_id FK cleanup_events (on delete cascade)`, `name`, `email`, `phone`, `created_at` + **`unique (event_id, email)`**.
+- `news` e `gallery_photos` — como o modelo atual.
+- Função `public.is_admin()` (security definer): retorna `true` se `profiles.role='admin'` para `auth.uid()`.
+- Trigger `set_pending()` (before insert em `reports`, `cleanup_events`, `news`, `gallery_photos`): se a requisição for `service_role` (seed/migração) **ou** moderador logado, mantém o `status` enviado; caso contrário força `'pending'` (ninguém anônimo publica direto).
+- Trigger em `event_signups` (after insert): `cleanup_events.signup_count = signup_count + 1`.
+- **RLS em todas as tabelas**: `reports`, `cleanup_events`, `news`, `gallery_photos` → SELECT/UPDATE/DELETE somente `is_admin()`; INSERT liberado a todos (trigger força `pending`). `event_signups` → INSERT a todos, sem SELECT público. `profiles` como acima.
+- **Views públicas** `security barrier` para leitura anônima (o `anon` não recebe SELECT nas tabelas base): `approved_reports` (somente `approved`, **sem `contact`**), `approved_cleanup_events` (somente `approved`, **sem `proposer_contact`**, com `signup_count`), `approved_news`, `approved_gallery_photos`. `grant select` a `anon` e `authenticated`.
+- Grants explícitos de SELECT/INSERT/UPDATE/DELETE nas tabelas base para `authenticated` (moderador) e views para `anon`.
+- Storage: bucket público `nascfz` (insert em `storage.buckets` `on conflict do nothing`) + policies em `storage.objects`: SELECT e INSERT para `anon`/`authenticated` com `bucket_id='nascfz'`. **Fallback** se o ambiente bloquear: `photo_url`/`image_url` continuam aceitando `data URL` no texto (interface já suporta).
+- Conferir resultado com `supabase_get_table_schema` (RLS ligado + policies listadas) e `supabase_read_query` (contadores).
 
-Dados persistidos + aprovação + contas de moderador exigem banco, autenticação e armazenamento de arquivos. **Enter Cloud não está habilitado** → habilitar via `supabase_enable` no início da implementação e carregar a skill `enter_cloud` antes de escrever SQL/auth/storage. Skills `frontend-design` (design system) também serão carregadas. Sem backend, o fluxo "conteúdo só aparece após aprovação" seria falso/mockado — não faremos isso.
+### 2. Autenticação da equipe (real)
 
-## Arquitetura & Stack
+- `supabase_configure_auth`: `disable_signup=true` (contas só nascem pelo convite) — sem usuários anônimos.
+- Segredo `ADMIN_INVITE_CODE` via `supabase_add_secret` (o usuário digita o código que vai compartilhar com a equipe).
+- Backend function `register-admin` (`supabase/functions/register-admin/index.ts`, `verify_jwt=false` no `supabase/config.toml`): CORS completo; valida `invite_code` contra `Deno.env.get('ADMIN_INVITE_CODE')` (errado → 403); cria o usuário autenticado (admin API, `email_confirm: true`) com `full_name`; insere `profiles` com `role='admin'`. Deploy via `supabase_deploy_edge_function`.
 
-- Frontend React existente + **@tanstack/react-query** (já instalado) para dados.
-- **Mapa**: `leaflet` + `react-leaflet` (novas dependências) com tiles OpenStreetMap — gratuito, sem chave de API. Marcadores por `L.divIcon` colorido por categoria.
-- **Gráficos** de impacto: `recharts` (já instalado).
-- **Backend**: Enter Cloud — Supabase client (já existe `@supabase/supabase-js`), tabelas + RLS, Storage para fotos, 1 função de backend para criar moderadores com código de convite.
-- **Design system**: identidade costeira definida pelo usuário — **azul, verde e branco** como base (água/estuário + mangue + fundos claros), com liberdade para **cores de apoio complementares** (ex.: tom quente de areia/âmbar em CTAs e destaques, e cores semânticas para situação das denúncias no mapa) — via tokens no `index.css` + `tailwind.config.ts`; linguagem de layout editorial do site de referência (hero com foto + CTA, faixa de declaração, grade de números, seções centradas). Componentes shadcn já disponíveis — reutilizar (button, card, badge, dialog, sheet, form, input, textarea, select, tabs, skeleton, sonner/toast etc.).
+### 3. Camada de dados do frontend (mesma interface, dados reais)
 
-## Modelo de dados (Enter Cloud)
+- **`src/components/data-provider.tsx`** (reescrito): passa a usar o client `@/integrations/supabase/client` (`supabase`). Estado local igual ao atual (`db` com `reports/events/news/photos`), mapeando `snake_case → camelCase`. No carregamento inicial: visitante busca as **views aprovadas**; moderador logado busca as **tabelas base** (todas as situações, com `contact`). Reage a `onAuthStateChange` (refetch ao entrar/sair). Mostra um loader simples até o primeiro carregamento (evita flash de conteúdo vazio). Ações escrevem no banco com atualização otimista local:
+  - `addReport/addEvent/addNews/addPhoto` → INSERT (id gerado no cliente e enviado; status controlado pelo trigger).
+  - `updateReport/updateEvent/updateNews/updatePhoto`, `remove` → UPDATE/DELETE.
+  - `addSignup` → vira **assíncrona** retornando `{ok, message}`; e-mail duplicado (constraint `unique`) vira a mensagem amigável atual.
+  - `resetDemo` **removido** (não faz sentido na nuvem).
+- **`src/lib/types.ts`**: `CleanupEvent` ganha `signupCount: number`; `AppDB` perde `signups` (as contagens vêm do contador). `NewSignupInput` continua igual.
+- **`src/lib/stats.ts`**: `voluntarios` passa a somar `signup_count` dos eventos aprovados (mesmo número de antes).
+- **`src/pages/voluntariado/index.tsx`**: `countFor` lê `event.signupCount`; `submit` do formulário de inscrição faz `await actions.addSignup(...)`.
+- **`src/lib/auth.ts`** (substituído): sessão real do `supabase.auth` + leitura do próprio perfil (`profiles`) para saber se é admin; removida a credencial demo.
+- **`src/pages/admin/index.tsx`**: login real (e-mail/senha); nova aba **"Registrar"** (nome, e-mail, senha, código de convite) chamando `supabase.functions.invoke('register-admin')` e entrando em seguida; botão "Restaurar demo" removido; demais abas (Pendentes/Publicados/Criar) permanecem, agora sobre o banco.
+- **`src/components/image-upload.tsx`**: comprime como hoje e **envia ao bucket `nascfz`** (`uploads/<uuid>.jpg`), devolvendo a URL pública via `onChange` — páginas de denúncia/galeria/equipe continuam idênticas.
 
-- `reports` — denúncia: `id`, `category` (descarte irregular; esgoto/efluente; degradação do manguezal; ocupação de área de preservação; poluição de rio/canal; queimada/desmatamento; outro), `title`, `description`, `reference` (ponto de referência), `lat`, `lng`, `photo_url`, `contact` (opcional, **nunca público**), `status` (`pending|approved|rejected`), `resolved` (bool), `resolution_note`, `created_at`.
-- `cleanup_events` — mutirão: `id`, `title`, `description`, `location_name`, `lat`, `lng`, `date`, `start_time`, `end_time`, `volunteers_target`, `signup_count` (contador), `proposer_name`, `proposer_contact` (só moderador), `status` (`pending|approved|cancelled`), `created_at`.
-- `event_signups` — inscrição: `id`, `event_id` (FK), `name`, `email`, `phone`, `created_at`. `unique(event_id, email)`.
-- `news` — notícia: `id`, `title`, `summary`, `body`, `cover_url`, `author`, `status` (`pending|approved`), `created_at`.
-- `gallery_photos` — foto: `id`, `title`, `description`, `image_url`, `author`, `status` (`pending|approved`), `created_at`.
-- `profiles` — moderadores: `id` (FK auth.users), `full_name`, `role` (`admin`), `created_at`.
+### 4. Seed realista no banco
 
-**Segurança/RLS (resumo)**:
-- Anônimo: `INSERT` nas tabelas de conteúdo permitido, mas trigger `set_pending()` força `status='pending'`. Anônimo **não** lê nada além de conteúdo `approved` (via **view** `approved_reports`, que exclui `contact`) nem atualiza nada.
-- `event_signups`: INSERT anônimo; contagem pública via contador `signup_count` por trigger (sem expor e-mails).
-- Moderador (`public.is_admin()` security definer): SELECT em tudo (pendentes/contatos), UPDATE/DELETE, marcar `resolved`.
-- Storage bucket com leitura pública e upload anônimo com nomes aleatórios (uuid).
-- Cadastro de moderador: `/admin` → aba "Registrar" (nome + e-mail + senha + **código de convite**); função de backend `register-admin` valida o código (secreto via `supabase_add_secret`, lido com `Deno.env.get`), cria o usuário autenticado e insere `profile` `role='admin'`. Contas de moderador = equipe do projeto (não há cadastro público).
+Via `supabase_insert`, o mesmo conteúdo atual de `src/lib/seed.ts`: 10 denúncias (8 aprovadas, 2 pendentes), 3 mutirões (2 aprovados, 1 pendente) com contadores, 12 inscrições (e1=10, e2=2), 4 notícias (3 aprovadas, 1 pendente), 7 fotos (6 aprovadas, 1 pendente). As imagens já existem na CDN (`src/lib/images.ts`) — apenas referências por URL. Depois: `src/lib/seed.ts` deixa de ser importado (conteúdo agora vive no banco).
 
-## Páginas & Rotas (todas em pt-BR)
+### Arquivos principais
 
-Estrutura comum: `PublicLayout` espelhando o padrão do site de referência — cabeçalho branco com logo central e navegação (Início, Mapa, Denúncias, Voluntariado, Notícias, Galeria, Impacto) + CTA "Denunciar"; rodapé com créditos e link discreto "Área da equipe" (→ `/admin`).
+- **Backend**: migration SQL única; `supabase/functions/register-admin/index.ts`; `supabase/config.toml` (entrada `register-admin`); secret `ADMIN_INVITE_CODE`.
+- **Frontend**: `src/components/data-provider.tsx` (reescrito), `src/lib/auth.ts` (reescrito), `src/lib/types.ts`, `src/lib/stats.ts`, `src/components/image-upload.tsx`, `src/pages/voluntariado/index.tsx`, `src/pages/admin/index.tsx`.
+- **Sem mudança visual**: `PublicLayout`, rotas, Home, Mapa, Denunciar, Denúncias, Notícias, Galeria, Impacto (lêem `db` como hoje).
+- `src/lib/seed.ts` e `src/lib/site.ts` (parte demo) ficam sem uso no fluxo de dados.
 
-| Rota | Conteúdo |
-|---|---|
-| `/` **Início** (aba principal; editorial, em seções) | **Hero**: foto de fundo (mangue/estuário da Ilha de Deus) com CTA principal "Acesse o mapa!" + faixa de declaração de valor ("A Ilha de Deus é parte do patrimônio natural do Recife…"). **Sobre o projeto e a comunidade** (seção principal): narrativa centralizada sobre o piloto na Ilha de Deus, a comunidade como protagonista e a visão de longo prazo — um projeto que **parece pequeno hoje, mas com impacto maior** sobre os sistemas costeiros do Recife. **Dados da comunidade** (grade de cards ao vivo, no estilo do site de referência): denúncias registradas, resolvidas, voluntários mobilizados, mutirões realizados (+ texto sobre a comunidade: território de mangue, histórico). **Como funciona / processo de verificação**: Observar → Denunciar → Verificar (equipe) → Publicar no mapa → Visibilizar → Encaminhar ao poder público → Acompanhar/resolver; origem dos dados e verificação antes de publicar. **Aviso "IMPORTANTE"**: dados de quem denuncia são protegidos. **Realização/Apoio**: quem faz (disciplina/universidade, comunidade) com espaço para parceiros. Últimas notícias aprovadas + CTAs. |
-| `/mapa` **Mapa** | CTA da home leva até aqui: Leaflet centralizado na Ilha de Deus; marcadores de denúncias **aprovadas**; filtro por categoria e por situação (ativa/resolvida); popup + painel lateral com detalhe (foto, descrição, referência, data, status, nº). |
-| `/denunciar` **Denunciar** | Formulário: categoria, título, descrição, ponto de referência, **clique no mapa para marcar o local** (lat/lng), foto opcional (upload), contato opcional; confirmação "Recebida — em verificação". |
-| `/denuncias` **Denúncias** | Página que explica a fiscalização comunitária e o fluxo até a resolução (no espírito do site de referência), tipos de problemas monitorados, garantia de proteção ao denunciante, lista recente de aprovadas e CTA para denunciar. |
-| `/voluntariado` **Voluntariado** | Mutirões aprovados futuros com data/hora/local e nº de inscritos; inscrição (nome/e-mail/tel); formulário "Propor um mutirão" → `pending`. |
-| `/noticias` e `/noticias/:id` | Lista e artigo (somente aprovadas). |
-| `/galeria` **Galeria** | Grade de fotos aprovadas (upload comunitário + equipe). |
-| `/impacto` **Impacto** | Transparência: contadores + gráficos recharts (por categoria, evolução mensal, abertas × resolvidas) — equivalente à seção "Impacto" do site de referência. |
-| `/admin` **Área da equipe** | Login (e-mail/senha) ou Registro (código de convite). Painel em abas: **Pendentes** (aprovar/rejeitar: denúncias, mutirões, notícias, fotos), **Publicados** (gerenciar; marcar denúncia resolvida com nota; cancelar mutirão; excluir), **Criar** (notícia/evento/foto pela equipe). Protegido por role. Acesso apenas pelo link discreto no rodapé. |
-| `*` 404 | Mantida. |
+## Implementation checklist
 
-## Demonstração (conteúdo de exemplo)
-
-- **Coordenadas**: ao iniciar a implementação, confirmar com o usuário um ponto de referência real (ex.: associação de moradores / entrada da comunidade) para centralizar mapa e dados de exemplo. Constante única `ILHA_DE_DEUS_CENTER` + `DEFAULT_ZOOM` em `src/lib/geo.ts`.
-- Seed realista via SQL (após Enter Cloud): ~8 denúncias aprovadas (algumas resolvidas, datas ao longo dos meses), 2 pendentes (para demonstrar a fila de verificação), 2 mutirões (1 aprovado futuro com inscritos, 1 pendente), 3 notícias aprovadas + 1 pendente, ~6 fotos aprovadas + 2 pendentes — textos que reflitam a realidade costeira/mangue da Ilha de Deus.
-- Imagens geradas com `image_generation` (hero: manguezal/estuário; mutirão de limpeza; comunidade; fauna costeira) para hero, notícias, denúncias e galeria.
-
-## Arquivos críticos
-
-- **Backend**: schema SQL (tabelas/triggers/views/RLS/`is_admin`), bucket de storage, função `register-admin` — criados via fluxo Enter Cloud (skill `enter_cloud`).
-- **Novos (frontend)**:
-  - `src/lib/supabase.ts` (client), `src/lib/types.ts`, `src/lib/geo.ts` (constantes do mapa), `src/lib/queries.ts` (hooks react-query por entidade)
-  - `src/components/layout/PublicLayout.tsx` (header/nav/footer responsivos, padrão editorial do site de referência)
-  - `src/pages/home/index.tsx` (home editorial em seções), `src/pages/mapa/index.tsx`, `src/pages/denunciar/index.tsx`, `src/pages/denuncias/index.tsx`, `src/pages/voluntariado/index.tsx`, `src/pages/noticias/index.tsx` + `artigo.tsx`, `src/pages/galeria/index.tsx`, `src/pages/impacto/index.tsx`, `src/pages/admin/index.tsx`
-  - Subcomponentes de página onde fizer sentido (formulários, cards de números, filtros, modais de moderação).
-- **Alterados**: `src/router.tsx` (rotas), `src/main.tsx` (remove import i18n), `src/index.css` + `tailwind.config.ts` (tokens/design), `index.html` (`lang="pt-BR"`), `package.json` (leaflet), `CodeGuideline.md` (estrutura).
-- **Removidos**: `src/i18n/`, `public/locales/`, `src/components/language-switcher.tsx`, `i18n.config.json`.
-
-## Implementação checklist
-
-- [ ] Carregar skill `enter_cloud` e habilitar Enter Cloud via `supabase_enable` (necessário para persistir dados com verificação — sem isso o fluxo seria mockado).
-- [ ] Carregar skill `frontend-design` e definir tokens de identidade costeira (**azul + verde + branco**) em `index.css`/`tailwind.config.ts` (tonalidades de água/estuário e mangue, gradientes, sombras) e conferir contraste claro/escuro.
-- [ ] Remover maquinaria de i18n (import em `main.tsx`, `src/i18n/`, `public/locales/`, `language-switcher.tsx`, `i18n.config.json`) e fixar `lang="pt-BR"` no `index.html`.
-- [ ] Adicionar dependências `leaflet`, `react-leaflet`, `@types/leaflet`.
-- [ ] Confirmar com o usuário o ponto de referência/coordenadas da Ilha de Deus e gravar em `src/lib/geo.ts`.
-- [ ] Criar schema no Enter Cloud: tabelas `profiles`, `reports`, `cleanup_events`, `event_signups`, `news`, `gallery_photos` com `status`/defaults.
-- [ ] Criar trigger `set_pending()` (conteúdo anônimo nasce `pending`), trigger de contador de inscritos, view `approved_reports` (sem `contact`) e políticas RLS com `public.is_admin()`.
-- [ ] Criar bucket de storage (leitura pública, upload anônimo com nome aleatório) e armazenar o segredo `ADMIN_INVITE_CODE` via `supabase_add_secret`.
-- [ ] Criar função de backend `register-admin` (valida convite via `Deno.env.get`, cria usuário autenticado + `profile role='admin'`).
-- [ ] Gerar imagens de demonstração via `image_generation` e aplicar seed SQL de conteúdo demo.
-- [ ] Criar client `supabase.ts`, tipos e hooks de query (`queries.ts`).
-- [ ] Criar `PublicLayout` responsivo (cabeçalho com logo/nav + CTA "Denunciar"; rodapé com créditos e link "Área da equipe").
-- [ ] Página Início com seções na ordem do padrão editorial (hero + "Acesse o mapa!", declaração de valor, sobre o projeto **e dados da comunidade** em cards, como funciona/verificação, aviso de privacidade, realização/apoios, notícias) — narrativa "projeto pequeno hoje, impacto maior a longo prazo".
-- [ ] Página Mapa (Leaflet, marcadores por categoria, filtros, detalhe, sem `contact`).
-- [ ] Página Denunciar (form + clique no mapa p/ coordenadas + upload de foto + contato opcional → `pending` + confirmação).
-- [ ] Página Denúncias (educativa, proteção ao denunciante, fluxo até resolução, lista recente aprovada).
-- [ ] Página Voluntariado (listar mutirões aprovados futuros com nº de inscritos; inscrever com e-mail; propor mutirão → `pending`).
-- [ ] Páginas Notícias (lista + artigo) e Galeria (grade), somente aprovadas.
-- [ ] Página Impacto (contadores + gráficos recharts por categoria, evolução mensal, abertas × resolvidas).
-- [ ] Página Admin (login, registro com convite, abas Pendentes/Publicados/Criar, marcar resolvida, cancelar/excluir) protegida por role.
-- [ ] Registrar rotas em `src/router.tsx` e atualizar `CodeGuideline.md` com a estrutura final.
+- [ ] Aplicar a migration única (tabelas + `is_admin()` + triggers `set_pending`/contador + RLS + views públicas + grants + bucket `nascfz` + policies de storage) via `supabase_migration`.
+- [ ] Confirmar com `supabase_get_table_schema`: RLS habilitado e policies presentes em `profiles`, `reports`, `cleanup_events`, `event_signups`, `news`, `gallery_photos`.
+- [ ] Configurar auth via `supabase_configure_auth` (`disable_signup=true`).
+- [ ] Coletar o segredo `ADMIN_INVITE_CODE` via `supabase_add_secret`.
+- [ ] Criar e deployar `register-admin` (`verify_jwt=false`); validar com CORS e erros (código errado → 403; sucesso → usuário + perfil admin).
+- [ ] Inserir seed realista (denúncias/mutirões/inscrições/notícias/fotos) via `supabase_insert`; conferir `signup_count` (e1=10, e2=2) com `supabase_read_query`.
+- [ ] Reescrever `src/components/data-provider.tsx` com o client do Enter Cloud, mapeamento de colunas, loader inicial, refetch em troca de sessão e ações otimistas; remover `resetDemo` e o uso de `localStorage`/`seed`.
+- [ ] Atualizar `src/lib/types.ts` (`signupCount` em `CleanupEvent`, `AppDB` sem `signups`).
+- [ ] Atualizar `src/lib/stats.ts` para somar `signup_count`; ajustar `src/pages/voluntariado/index.tsx` (`event.signupCount` + `await addSignup`).
+- [ ] Reescrever `src/lib/auth.ts` com sessão real; adaptar `src/pages/admin/index.tsx` (login real, aba Registrar com convite, remover botão "Restaurar demo").
+- [ ] Atualizar `src/components/image-upload.tsx` para upload no bucket e devolver URL pública.
+- [ ] Remover import de `seed.ts` morto no fluxo de dados.
+- [ ] `pnpm lint` e `pnpm exec tsc --noEmit` sem erros; `pnpm run build` conclui.
+- [ ] Registrar o primeiro moderador (`equipe@nascfz.org.br`) pela aba Registrar com o código de convite e publicar o site de novo (botão Publish) ao final.
 
 ## Verification checklist
 
-- [ ] `pnpm lint` e `pnpm exec tsc --noEmit` sem erros; `pnpm run build` conclui.
-- [ ] Fluxo positivo denúncia: visitante envia denúncia → não aparece no mapa → aprovação no `/admin` → aparece no mapa com marcador/filtro correto; `contact` nunca exposto (view pública).
-- [ ] Fluxo positivo mutirão: voluntário propõe → pendente → aprovado → listado no Voluntariado; inscrição incrementa `signup_count` e e-mail repetido no mesmo evento é bloqueado.
-- [ ] Fluxo positivo moderação: notícia/foto comunitária pendente → aprovada → aparece em Notícias/Galeria.
-- [ ] Negativo/segurança: conteúdo `pending`/`rejected` e campo `contact` não vazam ao público; anônimo não atualiza/exclui registros; `/admin` inacessível sem login de moderador; código de convite errado não cria conta admin.
-- [ ] Default/limites: listas vazias mostram estado vazio amigável; formulários exigem campos obrigatórios; datas passadas não aparecem como mutirões futuros na listagem.
-- [ ] Visual: identidade costeira **azul/verde/branco** aplicada nos tokens e páginas; hero com CTA "Acesse o mapa!" leva a `/mapa`; layout editorial em seções na home, similar ao padrão do site de referência (sem copiar marca).
-- [ ] Responsivo verificado com screenshots em `mobile_390` e `desktop_1280` (assunção declarada) nas rotas principais (Início, Mapa, Voluntariado) e navegação funcionando no mobile.
-- [ ] Rota `/` e todas as navs acessíveis; rota 404 mantida.
+- [ ] **Positivo público**: visitante (sem login) vê no preview as denúncias/mutirões/notícias/fotos aprovadas do seed; mapa, home, impacto e denúncias mostram contagens corretas (voluntários = 12).
+- [ ] **Fluxo denúncia**: enviar denúncia anônima no preview → não aparece no mapa (status `pending`); logar como moderador no `/admin` → aparece em Pendentes; aprovar → volta a aparecer publicamente (após reload).
+- [ ] **Fluxo mutirão**: propor mutirão → pendente; aprovar → listado em Voluntariado com contador; inscrever 2 vezes com o mesmo e-mail no mesmo evento → segunda tentaiva mostra a mensagem amigável de duplicado e o contador não sobe.
+- [ ] **Negativo/segurança**: com SQL de leitura confirmar que views públicas não contêm `contact`/`proposer_contact` e que `event_signups` não é legível publicamente; código de convite errado não cria conta; visitante não consegue alterar/excluir conteúdo (RLS).
+- [ ] **Registro de moderador**: `register-admin` cria o usuário e perfil `admin`; login real funciona; logout funciona; acesso ao `/admin` sem sessão mostra a tela de login/registro.
+- [ ] **Upload**: enviar foto em Denunciar/Galeria → imagem aparece no preview com URL do bucket `nascfz`.
+- [ ] **Build/escopo**: `pnpm run build` passa; sem mudanças visuais nas páginas públicas além do loader inicial.
