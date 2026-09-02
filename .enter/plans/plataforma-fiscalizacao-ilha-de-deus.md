@@ -14,7 +14,7 @@ O usuário pediu para usar o "De Olho na Guanabara" como base. Trata-se de um po
 - **Credibilidade**: todo ponto publicado foi **verificado antes de virar público**; origem de dados institucionais explícita.
 - **Proteção ao denunciante**: aviso "IMPORTANTE" afirmando que dados de quem denuncia são protegidos e nunca publicados.
 - **Institucional**: seção de realização, parceiros e apoios + rodapé com créditos.
-- **Layout**: cabeçalho branco com logo ao centro e navegação; hero com foto de fundo e botão CTA em destaque; faixa de declaração em cor forte; grade de cards de números; seções alternando texto centralizado. Vamos manter essa linguagem de comunicação (título forte, texto centralizado, seções claras) mas com **paleta própria de sistema costeiro** (verde-mangue, azul-estuário, areia) — sem copiar a marca do site de referência.
+- **Layout**: cabeçalho branco com logo ao centro e navegação; hero com foto de fundo e botão CTA em destaque; faixa de declaração em cor forte; grade de cards de números; seções alternando texto centralizado. Vamos manter essa linguagem de comunicação (título forte, texto centralizado, seções claras) mas com **paleta própria definida pelo usuário: azul + verde + branco** (tons costeiros — água, estuário e mangue) — sem copiar a marca do site de referência.
 - **Direção de design/comunicação (definida pelo usuário)**: visual **moderno e atual, porém simples — sem complicar o site** (navegação enxuta, hierarquia clara, sem excesso de elementos). A aba **Início é a principal**: nela ficam as informações sobre o projeto e os **dados da comunidade** (em cards/números), no estilo editorial do site de referência. A mensagem que deve ficar clara para quem visita: trata-se de um **projeto que parece pequeno hoje (um piloto na Ilha de Deus), mas com impacto maior e de longo prazo** sobre os sistemas costeiros do Recife — despertando a ideia de escala/replicabilidade.
 
 ### Decisões confirmadas com o usuário
@@ -36,7 +36,7 @@ Dados persistidos + aprovação + contas de moderador exigem banco, autenticaç�
 - **Mapa**: `leaflet` + `react-leaflet` (novas dependências) com tiles OpenStreetMap — gratuito, sem chave de API. Marcadores por `L.divIcon` colorido por categoria.
 - **Gráficos** de impacto: `recharts` (já instalado).
 - **Backend**: Enter Cloud — Supabase client (já existe `@supabase/supabase-js`), tabelas + RLS, Storage para fotos, 1 função de backend para criar moderadores com código de convite.
-- **Design system**: identidade "sistema costeiro" (verde-mangue, azul-estuário, areia) via tokens no `index.css` + `tailwind.config.ts`; linguagem de layout editorial do site de referência (hero com foto + CTA, faixa de declaração, grade de números, seções centradas). Componentes shadcn já disponíveis — reutilizar (button, card, badge, dialog, sheet, form, input, textarea, select, tabs, skeleton, sonner/toast etc.).
+- **Design system**: identidade costeira definida pelo usuário — **azul, verde e branco** (água/estuário + mangue + fundos claros) — via tokens no `index.css` + `tailwind.config.ts`; linguagem de layout editorial do site de referência (hero com foto + CTA, faixa de declaração, grade de números, seções centradas). Componentes shadcn já disponíveis — reutilizar (button, card, badge, dialog, sheet, form, input, textarea, select, tabs, skeleton, sonner/toast etc.).
 
 ## Modelo de dados (Enter Cloud)
 
@@ -91,7 +91,7 @@ Estrutura comum: `PublicLayout` espelhando o padrão do site de referência — 
 ## Implementação checklist
 
 - [ ] Carregar skill `enter_cloud` e habilitar Enter Cloud via `supabase_enable` (necessário para persistir dados com verificação — sem isso o fluxo seria mockado).
-- [ ] Carregar skill `frontend-design` e definir tokens de identidade "sistema costeiro" em `index.css`/`tailwind.config.ts` (verde-mangue/azul-estuário/areia, gradientes, sombras) e conferir contraste claro/escuro.
+- [ ] Carregar skill `frontend-design` e definir tokens de identidade costeira (**azul + verde + branco**) em `index.css`/`tailwind.config.ts` (tonalidades de água/estuário e mangue, gradientes, sombras) e conferir contraste claro/escuro.
 - [ ] Remover maquinaria de i18n (import em `main.tsx`, `src/i18n/`, `public/locales/`, `language-switcher.tsx`, `i18n.config.json`) e fixar `lang="pt-BR"` no `index.html`.
 - [ ] Adicionar dependências `leaflet`, `react-leaflet`, `@types/leaflet`.
 - [ ] Confirmar com o usuário o ponto de referência/coordenadas da Ilha de Deus e gravar em `src/lib/geo.ts`.
@@ -120,6 +120,6 @@ Estrutura comum: `PublicLayout` espelhando o padrão do site de referência — 
 - [ ] Fluxo positivo moderação: notícia/foto comunitária pendente → aprovada → aparece em Notícias/Galeria.
 - [ ] Negativo/segurança: conteúdo `pending`/`rejected` e campo `contact` não vazam ao público; anônimo não atualiza/exclui registros; `/admin` inacessível sem login de moderador; código de convite errado não cria conta admin.
 - [ ] Default/limites: listas vazias mostram estado vazio amigável; formulários exigem campos obrigatórios; datas passadas não aparecem como mutirões futuros na listagem.
-- [ ] Visual: identidade "sistema costeiro" aplicada; hero com CTA "Acesse o mapa!" leva a `/mapa`; layout editorial em seções na home, similar ao padrão do site de referência (sem copiar marca).
+- [ ] Visual: identidade costeira **azul/verde/branco** aplicada nos tokens e páginas; hero com CTA "Acesse o mapa!" leva a `/mapa`; layout editorial em seções na home, similar ao padrão do site de referência (sem copiar marca).
 - [ ] Responsivo verificado com screenshots em `mobile_390` e `desktop_1280` (assunção declarada) nas rotas principais (Início, Mapa, Voluntariado) e navegação funcionando no mobile.
 - [ ] Rota `/` e todas as navs acessíveis; rota 404 mantida.
