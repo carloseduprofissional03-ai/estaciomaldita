@@ -114,7 +114,7 @@ export default function Home() {
           className="absolute inset-0 h-full w-full object-cover"
           crossOrigin="anonymous"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/85 via-primary/55 to-primary/85" />
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/80 via-primary/40 to-primary/85" />
         <div className="relative mx-auto flex w-full max-w-7xl flex-col items-center px-4 py-24 text-center text-white sm:px-6 lg:py-32">
           <span className="animate-rise inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-xs font-medium backdrop-blur-sm">
             <Droplets className="h-3.5 w-3.5" />
@@ -147,10 +147,10 @@ export default function Home() {
       </section>
 
       {/* DECLARAÇÃO DE VALOR */}
-      <section className="bg-primary">
-        <div className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 py-16 text-center text-white sm:px-6 lg:py-20">
-          <Waves className="h-8 w-8 text-white/40" />
-          <p className="mt-6 text-balance font-display text-2xl font-medium leading-snug sm:text-3xl">
+      <section className="border-b border-border/60 bg-foam">
+        <div className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 py-16 text-center sm:px-6 lg:py-20">
+          <Waves className="h-8 w-8 text-primary/20" />
+          <p className="mt-6 text-balance font-display text-2xl font-bold leading-snug text-primary sm:text-3xl">
             “A Ilha de Deus é parte do patrimônio natural do Recife: mangue,
             rio e gente que se sustentam juntos. Proteger esse território é
             proteger a cidade inteira.”
