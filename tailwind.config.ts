@@ -13,9 +13,9 @@ export default {
 	theme: {
 		container: {
 			center: true,
-			padding: '2rem',
+			padding: '1.5rem',
 			screens: {
-				'2xl': '1400px'
+				'2xl': '1280px'
 			}
 		},
 		extend: {
@@ -62,29 +62,47 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				ocean: {
+					DEFAULT: 'hsl(var(--ocean))',
+					soft: 'hsl(var(--ocean-soft))'
+				},
+				leaf: {
+					DEFAULT: 'hsl(var(--leaf))',
+					deep: 'hsl(var(--leaf-deep))'
+				},
+				lagoon: {
+					DEFAULT: 'hsl(var(--lagoon))'
+				},
+				sand: {
+					DEFAULT: 'hsl(var(--sand))',
+					deep: 'hsl(var(--sand-deep))'
+				},
+				foam: {
+					DEFAULT: 'hsl(var(--foam))'
 				}
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				sm: 'calc(var(--radius) - 6px)'
+			},
+			fontFamily: {
+				display: ['Fraunces', 'Georgia', 'serif'],
+			},
+			boxShadow: {
+				soft: '0 14px 44px -18px hsl(var(--primary) / 0.25)',
+				leaf: '0 12px 30px -12px hsl(var(--leaf) / 0.55)',
+				card: '0 1px 2px hsl(var(--primary) / 0.06), 0 10px 30px -18px hsl(var(--primary) / 0.18)'
 			},
 			keyframes: {
 				'accordion-down': {
-					from: {
-						height: '0'
-					},
-					to: {
-						height: 'var(--radix-accordion-content-height)'
-					}
+					from: { height: '0' },
+					to: { height: 'var(--radix-accordion-content-height)' }
 				},
 				'accordion-up': {
-					from: {
-						height: 'var(--radix-accordion-content-height)'
-					},
-					to: {
-						height: '0'
-					}
+					from: { height: 'var(--radix-accordion-content-height)' },
+					to: { height: '0' }
 				}
 			},
 			animation: {
