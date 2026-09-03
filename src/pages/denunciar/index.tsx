@@ -1,11 +1,22 @@
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { MapContainer, Marker, TileLayer } from "react-leaflet";
+import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { CheckCircle2, Crosshair, MapPin, Send, ShieldCheck } from "lucide-react";
+import {
+  CheckCircle2,
+  Crosshair,
+  Loader2,
+  MapPin,
+  Send,
+  ShieldCheck,
+} from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
-import { ILHA_DE_DEUS_CENTER, TILE_URL, TILE_ATTRIBUTION } from "@/lib/geo";
+import {
+  ILHA_DE_DEUS_CENTER,
+  SATELLITE_URL,
+  SATELLITE_ATTRIBUTION,
+} from "@/lib/geo";
 import { useData } from "@/components/data-provider";
 import { ImageUpload } from "@/components/image-upload";
 import { Button } from "@/components/ui/button";
@@ -13,14 +24,29 @@ import { cn } from "@/lib/utils";
 
 const pointIcon = L.divIcon({
   className: "",
-  html: `<span style="display:block;width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#0f7a5f;border:3px solid #fff;box-shadow:0 6px 14px rgba(10,60,60,.4);"></span>`,
-  iconSize: [26, 26],
-  iconAnchor: [13, 26],
+  html: `<span style="display:block;width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#0f7a5f;border:3px solid #fff;box-shadow:0 0 0 4px rgba(15,122,95,.25),0 8px 18px rgba(10,60,60,.45);"></span>`,
+  iconSize: [28, 28],
+  iconAnchor: [14, 28],
 });
 
 interface Point {
   lat: number;
   lng: number;
+}
+
+/* Leva o mapa até a localização detectada */
+function FlyTo({ target }: { target: Point | null }) {
+  const map = useMap();
+  const last = useRef("");
+  useEffect(() => {
+    if (!target) return;
+    const key = `${target.lat.toFixed(6)},${target.lng.toFixed(6)}`;
+    if (key !== last.current) {
+      last.current = key;
+      map.flyTo([target.lat, target.lng], 17, { duration: 0.8 });
+    }
+  }, [target, map]);
+  return null;
 }
 
 export default function Denunciar() {
@@ -32,8 +58,37 @@ export default function Denunciar() {
   const [contact, setContact] = useState("");
   const [photo, setPhoto] = useState<string | undefined>(undefined);
   const [point, setPoint] = useState<Point | null>(null);
+  const [flyTarget, setFlyTarget] = useState<Point | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locMsg, setLocMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+
+  function useMyLocation() {
+    setLocMsg(null);
+    if (!("geolocation" in navigator)) {
+      setLocMsg(
+        "Seu navegador não suporta localização. Clique no mapa para marcar o ponto.",
+      );
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setPoint(p);
+        setFlyTarget(p);
+        setLocating(false);
+      },
+      () => {
+        setLocating(false);
+        setLocMsg(
+          "Não conseguimos acessar sua localização. Permita o acesso no navegador ou clique no mapa para marcar.",
+        );
+      },
+      { enableHighAccuracy: false, maximumAge: 30000, timeout: 10000 },
+    );
+  }
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -103,8 +158,93 @@ export default function Denunciar() {
       </section>
 
       <section className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px]">
-          <form onSubmit={handleSubmit} className="space-y-7">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_440px]">
+          {/* Localização vem primeiro (importante no celular) */}
+          <div className="lg:order-2">
+            <div className="overflow-hidden rounded-3xl border border-border/70 shadow-card lg:sticky lg:top-24">
+              <div className="flex items-center justify-between gap-2 bg-primary px-4 py-3 text-white">
+                <p className="flex items-center gap-2 text-sm font-semibold">
+                  <Crosshair className="h-4 w-4" />
+                  Onde aconteceu?
+                </p>
+                {point ? (
+                  <span className="rounded-full bg-leaf px-2.5 py-1 text-[10px] font-bold text-white">
+                    local marcado
+                  </span>
+                ) : (
+                  <span className="animate-pulse rounded-full bg-amber-400/90 px-2.5 py-1 text-[10px] font-bold text-amber-950">
+                    aguardando local
+                  </span>
+                )}
+              </div>
+
+              <div className="relative">
+                <MapContainer
+                  center={ILHA_DE_DEUS_CENTER}
+                  zoom={15}
+                  scrollWheelZoom
+                  className="z-0 h-[340px] w-full lg:h-[400px]"
+                  eventHandlers={{
+                    click: (e) => {
+                      setPoint({ lat: e.latlng.lat, lng: e.latlng.lng });
+                      setLocMsg(null);
+                    },
+                  }}
+                >
+                  <TileLayer
+                    attribution={SATELLITE_ATTRIBUTION}
+                    url={SATELLITE_URL}
+                  />
+                  <FlyTo target={flyTarget} />
+                  {point && (
+                    <Marker
+                      position={[point.lat, point.lng]}
+                      icon={pointIcon}
+                      draggable
+                      eventHandlers={{
+                        dragend: (e) => {
+                          const m = e.target as L.Marker;
+                          const p = m.getLatLng();
+                          setPoint({ lat: p.lat, lng: p.lng });
+                        },
+                      }}
+                    />
+                  )}
+                </MapContainer>
+
+                <button
+                  type="button"
+                  onClick={useMyLocation}
+                  disabled={locating}
+                  className="absolute right-3 top-3 z-[1000] inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-white/95 px-3.5 py-2 text-xs font-semibold text-primary shadow-card backdrop-blur transition hover:bg-white disabled:opacity-60"
+                >
+                  {locating ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-lagoon" />
+                  ) : (
+                    <Crosshair className="h-3.5 w-3.5 text-lagoon" />
+                  )}
+                  {locating ? "Buscando…" : "Usar minha localização"}
+                </button>
+              </div>
+            </div>
+
+            {locMsg && (
+              <div className="mt-3 rounded-2xl border border-destructive/25 bg-destructive/5 px-4 py-3 text-xs leading-relaxed text-destructive">
+                {locMsg}
+              </div>
+            )}
+            <div className="mt-3 flex items-start gap-2 rounded-2xl bg-sand px-4 py-3 text-xs leading-relaxed text-foreground/75">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-leaf-deep" />
+              <span>
+                Toque em <b>“Usar minha localização”</b> ou clique no mapa para
+                fixar o ponto. Você pode arrastar o marcador para ajustar e usar
+                o zoom se precisar.
+              </span>
+            </div>
+          </div>
+
+          {/* Formulário */}
+          <form onSubmit={handleSubmit} className="space-y-7 lg:order-1">
             <FieldBlock title="1. Qual é o problema?" hint="Escolha a categoria que mais se aproxima">
               <div className="grid gap-2 sm:grid-cols-2">
                 {CATEGORIES.map((c) => (
@@ -188,60 +328,6 @@ export default function Denunciar() {
               </p>
             </div>
           </form>
-
-          <div className="lg:sticky lg:top-24 lg:self-start">
-            <div className="overflow-hidden rounded-3xl border border-border/70 shadow-card">
-              <div className="flex items-center justify-between gap-2 bg-primary px-4 py-3 text-white">
-                <p className="flex items-center gap-2 text-sm font-semibold">
-                  <Crosshair className="h-4 w-4" />
-                  Marque o local no mapa
-                </p>
-                {point ? (
-                  <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-medium">
-                    {point.lat.toFixed(5)}, {point.lng.toFixed(5)}
-                  </span>
-                ) : (
-                  <span className="animate-pulse rounded-full bg-amber-400/90 px-2.5 py-1 text-[10px] font-bold text-amber-950">
-                    aguardando clique
-                  </span>
-                )}
-              </div>
-              <MapContainer
-                center={ILHA_DE_DEUS_CENTER}
-                zoom={16}
-                scrollWheelZoom
-                className="h-[380px] w-full lg:h-[460px]"
-                eventHandlers={{
-                  click: (e) => {
-                    setPoint({ lat: e.latlng.lat, lng: e.latlng.lng });
-                  },
-                }}
-              >
-                <TileLayer attribution={TILE_ATTRIBUTION} url={TILE_URL} />
-                {point && (
-                  <Marker
-                    position={[point.lat, point.lng]}
-                    icon={pointIcon}
-                    draggable
-                    eventHandlers={{
-                      dragend: (e) => {
-                        const m = e.target as L.Marker;
-                        const p = m.getLatLng();
-                        setPoint({ lat: p.lat, lng: p.lng });
-                      },
-                    }}
-                  />
-                )}
-              </MapContainer>
-            </div>
-            <div className="mt-3 flex items-start gap-2 rounded-2xl bg-sand px-4 py-3 text-xs leading-relaxed text-foreground/75">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-leaf-deep" />
-              <span>
-                Clique no mapa para fixar o ponto exato da ocorrência. Você pode
-                arrastar o marcador para ajustar. Aproxime com o zoom se precisar.
-              </span>
-            </div>
-          </div>
         </div>
       </section>
     </div>

@@ -11,7 +11,7 @@ import {
 import "leaflet/dist/leaflet.css";
 import { Filter, Map as MapIcon, MapPin, Plus, Satellite, X } from "lucide-react";
 import { CATEGORIES, getCategory } from "@/lib/categories";
-import { ILHA_DE_DEUS_CENTER, DEFAULT_ZOOM } from "@/lib/geo";
+import { ILHA_DE_DEUS_CENTER, DEFAULT_ZOOM, SATELLITE_URL, SATELLITE_ATTRIBUTION, TILE_URL, TILE_ATTRIBUTION } from "@/lib/geo";
 import { useData } from "@/components/data-provider";
 import type { Report } from "@/lib/types";
 import { fmtShort } from "@/lib/format";
@@ -24,16 +24,8 @@ import { Button } from "@/components/ui/button";
 type BaseMode = "sat" | "ruas";
 
 const BASE_TILES: Record<BaseMode, { url: string; attribution: string }> = {
-  sat: {
-    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-    attribution:
-      "Tiles &copy; Esri &mdash; Fonte: Esri, Maxar, Earthstar Geographics",
-  },
-  ruas: {
-    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-  },
+  sat: { url: SATELLITE_URL, attribution: SATELLITE_ATTRIBUTION },
+  ruas: { url: TILE_URL, attribution: TILE_ATTRIBUTION },
 };
 
 /* ---------- marcador com brilho e pulso ---------- */
