@@ -9,38 +9,63 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { Filter, MapPin, Plus, X } from "lucide-react";
+import { Filter, Map as MapIcon, MapPin, Plus, Satellite, X } from "lucide-react";
 import { CATEGORIES, getCategory } from "@/lib/categories";
-import { ILHA_DE_DEUS_CENTER, DEFAULT_ZOOM, TILE_URL, TILE_ATTRIBUTION } from "@/lib/geo";
+import { ILHA_DE_DEUS_CENTER, DEFAULT_ZOOM } from "@/lib/geo";
 import { useData } from "@/components/data-provider";
 import type { Report } from "@/lib/types";
 import { fmtShort } from "@/lib/format";
-import { cn, withAlpha } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { ReportStatusPill } from "@/components/status";
 import { Button } from "@/components/ui/button";
 
-/* Marcador circular colorido por categoria (estilo "De Olho na Guanabara") */
+/* ---------- camadas de mapa ---------- */
+
+type BaseMode = "sat" | "ruas";
+
+const BASE_TILES: Record<BaseMode, { url: string; attribution: string }> = {
+  sat: {
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    attribution:
+      "Tiles &copy; Esri &mdash; Fonte: Esri, Maxar, Earthstar Geographics",
+  },
+  ruas: {
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  },
+};
+
+/* ---------- marcador com brilho e pulso ---------- */
+
 function makeIcon(categoryColor: string, selected: boolean, resolved: boolean) {
-  const s = selected ? 30 : 22;
+  const s = selected ? 34 : 24;
   const color = resolved ? "#94a3b8" : categoryColor;
   return L.divIcon({
     className: "",
     html: `<span style="
-      display:grid; width:${s}px; height:${s}px; border-radius:9999px;
-      background:${color}; border:${selected ? 4 : 3}px solid rgba(255,255,255,.95);
-      box-shadow:${selected ? "0 0 0 5px " + color + "3a" : "0 4px 12px rgba(10,50,60,.4)"};
-      place-items:center; transition: box-shadow .15s;
+      position:relative; display:grid; width:${s}px; height:${s}px;
+      border-radius:9999px; background:${color};
+      border:2px solid rgba(255,255,255,.95);
+      box-shadow:0 0 0 ${selected ? 5 : 2}px rgba(255,255,255,.28),
+                 0 0 ${selected ? 26 : 14}px ${color === "#94a3b8" ? "rgba(148,163,184,.8)" : color + "b3"};
+      place-items:center;
     ">${
+      selected
+        ? `<span class="marker-ping" style="background:${color}"></span>`
+        : ""
+    }${
       resolved
         ? `<span style="color:#fff; font-size:${selected ? 14 : 11}px; font-weight:900; line-height:1">✓</span>`
-        : `<span style="width:${selected ? 10 : 7}px; height:${selected ? 10 : 7}px; border-radius:9999px; background:rgba(255,255,255,.95); display:block"></span>`
+        : `<span style="width:${selected ? 9 : 6}px; height:${selected ? 9 : 6}px; border-radius:9999px; background:rgba(255,255,255,.95); display:block"></span>`
     }</span>`,
     iconSize: [s, s],
     iconAnchor: [s / 2, s / 2],
   });
 }
 
-/* Voar até o ponto selecionado */
+/* ---------- helpers do mapa ---------- */
+
 function FlyTo({ position }: { position: [number, number] | null }) {
   const map = useMap();
   const last = useRef("");
@@ -55,7 +80,6 @@ function FlyTo({ position }: { position: [number, number] | null }) {
   return null;
 }
 
-/* Clicar no mapa vazio fecha o detalhe */
 function MapClickReset({ onClear }: { onClear: () => void }) {
   useMapEvents({
     click() {
@@ -69,6 +93,7 @@ type Situacao = "todas" | "ativas" | "resolvidas";
 
 export default function Mapa() {
   const { db } = useData();
+  const [base, setBase] = useState<BaseMode>("sat");
   const [cats, setCats] = useState<Set<string>>(
     () => new Set(CATEGORIES.map((c) => c.id)),
   );
@@ -98,6 +123,19 @@ export default function Mapa() {
   const resolvedCount = reports.filter((r) => r.resolved).length;
   const focus = selected ? ([selected.lat, selected.lng] as [number, number]) : null;
 
+  const catCounts = useMemo(() => {
+    const map = new Map<string, { total: number; ativas: number }>();
+    for (const c of CATEGORIES) map.set(c.id, { total: 0, ativas: 0 });
+    for (const r of reports) {
+      const cur = map.get(r.category);
+      if (cur) {
+        cur.total += 1;
+        if (!r.resolved) cur.ativas += 1;
+      }
+    }
+    return map;
+  }, [reports]);
+
   function toggleCat(id: string) {
     setCats((prev) => {
       const next = new Set(prev);
@@ -115,11 +153,13 @@ export default function Mapa() {
     setSelectedId((cur) => (cur === id ? null : id));
   }
 
+  const tiles = BASE_TILES[base];
+
   return (
     <div>
-      {/* Cabeçalho da página */}
+      {/* Cabeçalho curto da página */}
       <section className="border-b border-border/60 bg-gradient-to-b from-foam to-background">
-        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-end justify-between gap-4 px-4 py-8 sm:px-6">
+        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-end justify-between gap-4 px-4 py-6 sm:px-6">
           <div className="max-w-2xl">
             <p className="mb-2 inline-flex items-center gap-2 rounded-full bg-ocean-soft px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary">
               <MapPin className="h-3.5 w-3.5" />
@@ -128,10 +168,9 @@ export default function Mapa() {
             <h1 className="text-balance font-display text-3xl font-semibold text-primary sm:text-4xl">
               Mapa da fiscalização comunitária
             </h1>
-            <p className="mt-3 text-muted-foreground">
-              Cada ponto foi registrado pela comunidade e{" "}
-              <b>verificado pela equipe</b> antes de virar público. Clique num
-              marcador para ver o detalhe.
+            <p className="mt-2 text-sm text-muted-foreground">
+              Vista de satélite do território. Cada ponto foi verificado pela
+              equipe antes de virar público — clique num marcador para detalhes.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -148,15 +187,15 @@ export default function Mapa() {
         </div>
       </section>
 
-      {/* Mapa protagonista (quase tela inteira) */}
-      <div className="relative w-full">
+      {/* Mapa imersivo */}
+      <div className="relative">
         <MapContainer
           center={ILHA_DE_DEUS_CENTER}
           zoom={DEFAULT_ZOOM}
           scrollWheelZoom
-          className="z-0 h-[62vh] min-h-[440px] w-full lg:h-[calc(100vh-300px)] lg:min-h-[580px]"
+          className="z-0 h-[70vh] w-full lg:h-[calc(100vh-248px)] lg:min-h-[560px]"
         >
-          <TileLayer attribution={TILE_ATTRIBUTION} url={TILE_URL} />
+          <TileLayer attribution={tiles.attribution} url={tiles.url} />
           <FlyTo position={focus} />
           <MapClickReset onClear={() => setSelectedId(null)} />
           {visible.map((r) => {
@@ -174,18 +213,16 @@ export default function Mapa() {
           })}
         </MapContainer>
 
-        {/* Barra flutuante de filtros + legenda */}
-        <div className="pointer-events-none absolute inset-x-0 top-3 z-[1100] flex justify-center px-3 sm:px-6">
-          <div className="pointer-events-auto w-full max-w-3xl overflow-hidden rounded-2xl border border-border/70 bg-card/95 shadow-card backdrop-blur">
-            <div className="flex items-center gap-2 px-4 py-3 text-sm">
-              <span className="inline-flex items-center gap-1.5 font-display font-semibold text-primary">
+        {/* Painel flutuante: filtros + legenda + alternância Satélite/Ruas */}
+        <div className="pointer-events-none absolute inset-x-0 top-3 z-[1200] flex justify-center px-3 sm:inset-x-auto sm:left-5 sm:right-auto sm:justify-start">
+          <div className="pointer-events-auto w-full max-w-xl overflow-hidden rounded-2xl border border-white/60 bg-white/90 shadow-soft backdrop-blur-md">
+            <div className="flex items-center gap-2 border-b border-border/60 px-3.5 py-2.5">
+              <span className="inline-flex items-center gap-1.5 font-display text-sm font-semibold text-primary">
                 <Filter className="h-4 w-4 text-lagoon" />
                 Filtros
               </span>
 
-              <div className="mx-1 h-5 w-px shrink-0 bg-border" />
-
-              <div className="flex shrink-0 gap-1 rounded-full bg-secondary p-0.5">
+              <div className="flex gap-1 rounded-full bg-secondary p-0.5">
                 {(
                   [
                     { id: "todas", label: "Todas" },
@@ -201,7 +238,7 @@ export default function Mapa() {
                       setSelectedId(null);
                     }}
                     className={cn(
-                      "rounded-full px-2.5 py-1 text-xs font-semibold transition",
+                      "rounded-full px-2 py-1 text-[11px] font-semibold transition",
                       situacao === s.id
                         ? "bg-primary text-primary-foreground shadow-sm"
                         : "text-muted-foreground hover:text-primary",
@@ -212,25 +249,26 @@ export default function Mapa() {
                 ))}
               </div>
 
-              <span className="ml-auto hidden shrink-0 text-xs font-medium text-muted-foreground sm:inline">
-                {visible.length} ponto{visible.length === 1 ? "" : "s"} no mapa ·{" "}
-                {resolvedCount} resolvida{resolvedCount === 1 ? "" : "s"}
+              <span className="ml-auto hidden text-[11px] font-medium text-muted-foreground sm:inline">
+                {visible.length} no mapa · {resolvedCount} resolvidas
               </span>
             </div>
 
-            <div className="flex items-center gap-1.5 overflow-x-auto border-t border-border/60 px-3 py-2.5 [scrollbar-width:thin]">
-              {CATEGORIES.map((c) => {
+            <div className="relative">
+              <div className="flex flex-nowrap items-center gap-1.5 overflow-x-auto px-3 py-2.5 [scrollbar-width:thin] sm:flex-wrap sm:overflow-visible">
+                {CATEGORIES.map((c) => {
                 const on = cats.has(c.id);
+                const count = catCounts.get(c.id);
                 return (
                   <button
                     key={c.id}
                     type="button"
                     onClick={() => toggleCat(c.id)}
                     className={cn(
-                      "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition",
+                      "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition sm:shrink",
                       on
                         ? "border-transparent text-white shadow-sm"
-                        : "border-border bg-background text-muted-foreground hover:bg-secondary",
+                        : "border-border bg-white text-muted-foreground hover:bg-secondary",
                     )}
                     style={on ? { backgroundColor: c.color } : undefined}
                   >
@@ -241,22 +279,77 @@ export default function Mapa() {
                       }}
                     />
                     {c.short}
+                    <span
+                      className={cn(
+                        "text-[10px] font-bold",
+                        on ? "text-white/80" : "text-muted-foreground/70",
+                      )}
+                    >
+                      {count?.total ?? 0}
+                    </span>
                   </button>
                 );
               })}
+              {cats.size < CATEGORIES.length && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCats(new Set(CATEGORIES.map((x) => x.id)))
+                  }
+                  className="shrink-0 rounded-full px-2 py-1 text-xs font-semibold text-lagoon underline-offset-2 hover:underline"
+                >
+                  Mostrar todas
+                </button>
+              )}
+              </div>
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white to-transparent sm:hidden"
+              />
+            </div>
+
+            <div className="flex items-center gap-1 border-t border-border/60 px-3 py-2">
+              <span className="mr-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Base
+              </span>
+              <div className="flex rounded-full bg-secondary p-0.5">
+                {(
+                  [
+                    { id: "sat", label: "Satélite", Icon: Satellite },
+                    { id: "ruas", label: "Ruas", Icon: MapIcon },
+                  ] as {
+                    id: BaseMode;
+                    label: string;
+                    Icon: typeof Satellite;
+                  }[]
+                ).map(({ id, label, Icon }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setBase(id)}
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition",
+                      base === id
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-primary",
+                    )}
+                  >
+                    <Icon className="h-3 w-3" />
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
 
         {/* Detalhe do ponto selecionado */}
         {selected && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1100] flex justify-center p-3 sm:p-5">
-            <DetailCard report={selected} onClose={() => setSelectedId(null)} />
-          </div>
+          <DetailPanel report={selected} onClose={() => setSelectedId(null)} />
         )}
       </div>
 
-      {/* Faixa de confiança abaixo do mapa */}
+      {/* Faixa de confiança */}
       <div className="border-t border-border/60 bg-background">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-2 px-4 py-6 text-center sm:flex-row sm:gap-4 sm:px-6">
           <p className="text-sm text-muted-foreground">
@@ -277,20 +370,33 @@ export default function Mapa() {
   );
 }
 
-/* ---------- Card de detalhe flutuante ---------- */
+/* ---------- Painel de detalhe (lateral no desktop, sheet no mobile) ---------- */
 
-function DetailCard({ report, onClose }: { report: Report; onClose: () => void }) {
+function DetailPanel({ report, onClose }: { report: Report; onClose: () => void }) {
   const cat = getCategory(report.category);
   return (
-    <article className="pointer-events-auto relative w-full max-w-md overflow-hidden rounded-3xl border border-border/70 bg-card shadow-card">
-      {report.photoUrl ? (
-        <div className="relative">
-          <img
-            src={report.photoUrl}
-            alt={report.title}
-            className="h-44 w-full object-cover"
-            crossOrigin="anonymous"
-          />
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1300] flex justify-center p-2 sm:inset-x-auto sm:bottom-4 sm:right-4 sm:top-4 sm:block sm:w-[400px] sm:p-0">
+      <article className="pointer-events-auto flex max-h-[70vh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl border border-border/60 bg-white/95 shadow-card backdrop-blur sm:max-h-full sm:max-w-none sm:rounded-3xl">
+        <div className="relative shrink-0">
+          {report.photoUrl ? (
+            <img
+              src={report.photoUrl}
+              alt={report.title}
+              className="h-44 w-full object-cover sm:h-52"
+              crossOrigin="anonymous"
+            />
+          ) : (
+            <div
+              className="flex h-24 items-end px-5 pb-2 sm:h-28"
+              style={{
+                background: `linear-gradient(160deg, ${cat.color}22, ${cat.color}55)`,
+              }}
+            >
+              <p className="font-display text-2xl font-semibold text-primary">
+                {cat.short}
+              </p>
+            </div>
+          )}
           <span
             className="absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm"
             style={{ backgroundColor: cat.color }}
@@ -298,59 +404,43 @@ function DetailCard({ report, onClose }: { report: Report; onClose: () => void }
             {cat.short}
           </span>
         </div>
-      ) : (
-        <div
-          className="flex items-center justify-between gap-2 px-5 pt-4 pr-12"
-        >
-          <p
-            className="text-[11px] font-bold uppercase tracking-wider"
-            style={{ color: cat.color }}
-          >
-            {cat.short}
-          </p>
-          <ReportStatusPill status={report.status} resolved={report.resolved} />
-        </div>
-      )}
 
-      <div className="px-5 pb-5 pt-3">
-        {report.photoUrl && (
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <p
-              className="text-[11px] font-bold uppercase tracking-wider"
-              style={{ color: cat.color }}
-            >
-              {cat.short}
-            </p>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="font-display text-lg font-semibold leading-snug text-primary">
+              {report.title}
+            </h3>
             <ReportStatusPill status={report.status} resolved={report.resolved} />
           </div>
-        )}
-        <h3 className="font-display text-lg font-semibold leading-snug text-primary">
-          {report.title}
-        </h3>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {report.reference} · {fmtShort(report.createdAt)}
-        </p>
-        <p className="mt-3 max-h-32 overflow-y-auto text-sm leading-relaxed text-muted-foreground">
-          {report.description}
-        </p>
-        {report.resolved && report.resolutionNote && (
-          <div
-            className="mt-3 rounded-xl border border-accent p-3 text-sm text-accent-foreground"
-            style={{ backgroundColor: withAlpha(cat.color, 0.08) }}
+          <p className="mt-1 text-xs text-muted-foreground">
+            {report.reference} · {fmtShort(report.createdAt)}
+          </p>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            {report.description}
+          </p>
+          {report.resolved && report.resolutionNote && (
+            <div className="mt-3 rounded-xl border border-accent bg-accent/40 p-3 text-sm text-accent-foreground">
+              <b>Acompanhamento:</b> {report.resolutionNote}
+            </div>
+          )}
+          <Link
+            to="/denunciar"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
           >
-            <b>Acompanhamento:</b> {report.resolutionNote}
-          </div>
-        )}
-      </div>
+            <Plus className="h-4 w-4" />
+            Denunciar algo parecido
+          </Link>
+        </div>
 
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label="Fechar detalhe"
-        className="absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-background/85 text-primary shadow-sm backdrop-blur transition hover:bg-background"
-      >
-        <X className="h-4 w-4" />
-      </button>
-    </article>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Fechar detalhe"
+          className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-background/80 text-primary shadow-sm backdrop-blur transition hover:bg-background"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </article>
+    </div>
   );
 }
