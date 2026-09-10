@@ -23,6 +23,7 @@ import {
   signIn,
   signOut,
   subscribeAuth,
+  TEAM_CREDENTIALS,
 } from "@/lib/auth";
 import { SITE } from "@/lib/site";
 import { getCategory } from "@/lib/categories";
@@ -273,20 +274,21 @@ function Login({ onLogin }: { onLogin: () => void }) {
         <div className="mt-5 rounded-2xl border border-dashed border-border bg-card/70 p-4 text-xs leading-relaxed text-muted-foreground">
           {mode === "registrar" ? (
             <p>
-              O <b>código de convite</b> é secreto e fica apenas com a equipe do
-              projeto. Quem o tiver pode criar uma conta de moderador.
+              O cadastro com <b>código de convite</b> fica disponível quando a
+              ferramenta completa (com servidor) estiver ativa. Nesta versão,
+              entre com a conta da equipe.
             </p>
           ) : (
-            <p className="flex items-center gap-1.5 font-semibold text-primary">
-              <Info className="h-4 w-4 text-lagoon" />
-              Acesso com conta real
-            </p>
-          )}
-          {mode === "entrar" && (
-            <p className="mt-1.5">
-              Use a conta de moderador criada com o código de convite. Não é
-              possível criar conta sem o convite da equipe.
-            </p>
+            <>
+              <p className="flex items-center gap-1.5 font-semibold text-primary">
+                <Info className="h-4 w-4 text-lagoon" />
+                Versão sem servidor (demonstração)
+              </p>
+              <p className="mt-1.5">
+                Acesse com <b>e-mail:</b> {TEAM_CREDENTIALS.email} ·{" "}
+                <b>senha:</b> {TEAM_CREDENTIALS.password}
+              </p>
+            </>
           )}
         </div>
       </div>

@@ -1,72 +1,86 @@
-import { supabase } from "@/integrations/supabase/client";
-
 /*
- * Autenticação real (Enter Cloud) da Área da equipe.
- * O cadastro de moderadores exige o código de convite (validado na função
- * de backend register-admin) — não há cadastro público.
+ * Acesso da equipe na versão SEM nuvem.
+ * A conta é fixa (demonstração) e a sessão fica no navegador — o suficiente
+ * para a equipe demonstrar o fluxo de moderação. Quando a ferramenta completa
+ * (com servidor) estiver ativa, este módulo é trocado pela autenticação real.
  */
 
+const AUTH_KEY = "nascfz-team-session";
+const AUTH_EVENT = "nascfz-auth-change";
+
+export const TEAM_CREDENTIALS = {
+  email: "equipe@nascfz.org.br",
+  password: "ilhadeus2026",
+};
+
+const DEMO_ADMIN_ID = "demo-admin";
+
+function readSession(): { id: string; email: string } | null {
+  try {
+    return localStorage.getItem(AUTH_KEY) === "1"
+      ? { id: DEMO_ADMIN_ID, email: TEAM_CREDENTIALS.email }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function notify() {
+  window.dispatchEvent(new Event(AUTH_EVENT));
+}
+
 export function subscribeAuth(cb: (userId: string | null) => void): () => void {
-  const {
-    data: { subscription },
-  } = supabase.auth.onAuthStateChange((_event, session) => {
-    cb(session?.user?.id ?? null);
-  });
-  return () => subscription.unsubscribe();
+  cb(readSession()?.id ?? null);
+  const handler = () => cb(readSession()?.id ?? null);
+  window.addEventListener(AUTH_EVENT, handler);
+  return () => window.removeEventListener(AUTH_EVENT, handler);
 }
 
 export async function getSessionUser(): Promise<{
   id: string | null;
   email: string | null;
 }> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return { id: user?.id ?? null, email: user?.email ?? null };
+  const session = readSession();
+  return { id: session?.id ?? null, email: session?.email ?? null };
 }
 
 export async function isAdminUser(userId: string): Promise<boolean> {
-  const { data } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .maybeSingle();
-  return data?.role === "admin";
+  return userId === DEMO_ADMIN_ID;
 }
 
 export async function signIn(
   email: string,
   password: string,
 ): Promise<{ error?: string }> {
-  const { error } = await supabase.auth.signInWithPassword({
-    email: email.trim().toLowerCase(),
-    password,
-  });
-  if (error) {
-    return { error: "E-mail ou senha incorretos." };
+  const ok =
+    email.trim().toLowerCase() === TEAM_CREDENTIALS.email &&
+    password === TEAM_CREDENTIALS.password;
+  if (!ok) return { error: "E-mail ou senha incorretos." };
+  try {
+    localStorage.setItem(AUTH_KEY, "1");
+  } catch {
+    // ignora
   }
+  notify();
   return {};
 }
 
 export async function signOut(): Promise<void> {
-  await supabase.auth.signOut();
+  try {
+    localStorage.removeItem(AUTH_KEY);
+  } catch {
+    // ignora
+  }
+  notify();
 }
 
-export async function registerModerator(input: {
-  full_name: string;
-  email: string;
-  password: string;
-  invite_code: string;
-}): Promise<{ ok: boolean; error?: string }> {
-  const { data, error } = await supabase.functions.invoke("register-admin", {
-    body: input,
-  });
-  if (error) {
-    return { ok: false, error: "Não foi possível contatar o servidor." };
-  }
-  const body = data as { ok?: boolean; error?: string };
-  if (!body?.ok) {
-    return { ok: false, error: body?.error ?? "Não foi possível registrar." };
-  }
-  return { ok: true };
+export async function registerModerator(): Promise<{
+  ok: boolean;
+  error?: string;
+}> {
+  return {
+    ok: false,
+    error:
+      "O cadastro de moderadores com código de convite depende da ferramenta completa (com servidor). Nesta versão, entre com a conta da equipe.",
+  };
 }

@@ -127,6 +127,11 @@ export default function Denunciar() {
           Nada é publicado sem conferência. Assim que a equipe verificar o
           registro, o ponto aparece no mapa comunitário.
         </p>
+        <p className="mt-4 max-w-lg rounded-xl bg-sand px-4 py-3 text-xs leading-relaxed text-foreground/75">
+          Nesta versão (sem servidor), o registro fica salvo neste navegador.
+          Quando a ferramenta completa estiver ativa, a denúncia chega
+          automaticamente para a equipe.
+        </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Button asChild variant="leaf">
             <Link to="/mapa">Ver o mapa</Link>

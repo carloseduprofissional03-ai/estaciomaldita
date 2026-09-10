@@ -260,6 +260,11 @@ function ProposeForm() {
           Assim como as denúncias, as propostas de mutirão passam pela
           verificação da equipe antes de virar evento público.
         </p>
+        <p className="mx-auto mt-3 max-w-md rounded-xl bg-sand px-4 py-3 text-xs leading-relaxed text-foreground/75">
+          Nesta versão (sem servidor), a proposta fica registrada neste
+          navegador. Quando a ferramenta completa estiver ativa, ela chega
+          automaticamente para a equipe.
+        </p>
       </div>
     );
   }
@@ -270,8 +275,9 @@ function ProposeForm() {
         Quer propor um mutirão na comunidade?
       </h2>
       <p className="mt-2 text-sm text-muted-foreground">
-        Escolha dia, hora e local — a equipe verifica e, se aprovado, ele entra
-        na agenda pública de voluntariado.
+        Esta aba é aberta para toda a comunidade: qualquer morador ou voluntário
+        pode sugerir dia, hora e local — a equipe verifica e, se aprovado, o
+        mutirão entra na agenda pública de voluntariado.
       </p>
       <form onSubmit={submit} className="mt-6 grid gap-4 md:grid-cols-2">
         <div className="md:col-span-2">
