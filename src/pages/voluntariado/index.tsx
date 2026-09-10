@@ -5,6 +5,7 @@ import {
   Clock,
   HandHeart,
   Loader2,
+  Mail,
   MapPin,
   PartyPopper,
   Send,
@@ -12,6 +13,7 @@ import {
 } from "lucide-react";
 import { useData } from "@/components/data-provider";
 import { isUpcoming, todayISO } from "@/lib/format";
+import { TEAM_CONTACT_EMAIL } from "@/lib/site";
 import type { CleanupEvent } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -85,6 +87,7 @@ function EventCard({ event, count }: { event: CleanupEvent; count: number }) {
   const [msg, setMsg] = useState<{ type: "ok" | "erro"; text: string } | null>(null);
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [mailtoLink, setMailtoLink] = useState("");
 
   const dia = event.date.split("-");
   const full = Number(count) >= Number(event.volunteersTarget ?? Infinity);
@@ -109,6 +112,29 @@ function EventCard({ event, count }: { event: CleanupEvent; count: number }) {
     }
     setMsg(null);
     setDone(true);
+
+    // Envia a inscrição para a equipe por e-mail (sem depender de servidor).
+    const subject = `Inscrição no mutirão: ${event.title}`;
+    const body = [
+      `Olá! Quero me inscrever no mutirão "${event.title}".`,
+      "",
+      `Data: ${event.date} (${event.startTime} às ${event.endTime})`,
+      `Ponto de encontro: ${event.locationName}`,
+      "",
+      "Meus dados:",
+      `Nome: ${name.trim()}`,
+      `E-mail: ${email.trim()}`,
+      phone.trim() ? `WhatsApp: ${phone.trim()}` : "",
+      "",
+      "Enviado pelo site Da Nascente à Foz.",
+    ]
+      .filter(Boolean)
+      .join("\n");
+    const link = `mailto:${TEAM_CONTACT_EMAIL}?subject=${encodeURIComponent(
+      subject,
+    )}&body=${encodeURIComponent(body)}`;
+    setMailtoLink(link);
+    window.location.href = link;
   }
 
   return (
@@ -157,7 +183,7 @@ function EventCard({ event, count }: { event: CleanupEvent; count: number }) {
           {done ? (
             <div className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground">
               <CheckCircle2 className="h-4 w-4 text-leaf-deep" />
-              Inscrição confirmada!
+              Inscrição preparada!
             </div>
           ) : full ? (
             <span className="rounded-full bg-secondary px-4 py-2 text-sm font-semibold text-secondary-foreground">
@@ -170,6 +196,28 @@ function EventCard({ event, count }: { event: CleanupEvent; count: number }) {
           )}
         </div>
       </div>
+
+      {done && (
+        <div className="border-t border-border/70 bg-foam/60 px-6 py-5">
+          <p className="flex items-start gap-2 text-sm text-foreground/80">
+            <Mail className="mt-0.5 h-4 w-4 shrink-0 text-leaf-deep" />
+            <span>
+              Abrimos o seu aplicativo de e-mail com a inscrição pronta
+              (<b>{TEAM_CONTACT_EMAIL}</b>). <b>É só enviar a mensagem</b> para a
+              equipe confirmar sua vaga.
+            </span>
+          </p>
+          {mailtoLink && (
+            <a
+              href={mailtoLink}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-ocean-soft"
+            >
+              <Mail className="h-3.5 w-3.5" />
+              Abrir o e-mail novamente
+            </a>
+          )}
+        </div>
+      )}
 
       {open && !done && (
         <form onSubmit={submit} className="border-t border-border/70 bg-foam/60 px-6 py-5">
@@ -189,7 +237,7 @@ function EventCard({ event, count }: { event: CleanupEvent; count: number }) {
               {busy ? "Enviando…" : "Confirmar inscrição"}
             </Button>
             <p className="text-xs text-muted-foreground">
-              Usaremos seus dados apenas para avisar sobre o mutirão.
+              Sua inscrição será enviada por e-mail para a equipe do projeto.
             </p>
           </div>
         </form>

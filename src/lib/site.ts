@@ -7,3 +7,6 @@ export const SITE = {
   pilot: "Piloto: Ilha de Deus, Recife (PE)",
   adminEmail: "equipe@nascfz.org.br",
 };
+
+// Contato que recebe as inscrições nos mutirões (versão sem servidor).
+export const TEAM_CONTACT_EMAIL = "carlos.eduprofissional03@gmail.com";
