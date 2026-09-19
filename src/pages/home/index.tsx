@@ -81,11 +81,7 @@ export default function Home() {
             Parece pequeno hoje.{" "}
             <span className="text-lagoon">É a nascente de algo maior.</span>
           </h1>
-          <p className="animate-rise animate-rise-2 mx-auto mt-5 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Um projeto de fiscalização ambiental comunitária que une uma
-            comunidade de mangue à preservação dos sistemas costeiros do Recife
-            — da nascente à foz, quem cuida é quem mora.
-          </p>
+          <p className="animate-rise animate-rise-2 mx-auto mt-5 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">{"Um projeto de fiscaliza\xE7\xE3o ambiental comunit\xE1ria que une uma comunidade de mangue \xE0 preserva\xE7\xE3o dos sistemas costeiros do Recife"}</p>
           <div className="animate-rise animate-rise-3 mt-8 flex flex-wrap items-center justify-center gap-3">
             <Button asChild variant="leaf" size="lg">
               <Link to="/mapa">
@@ -101,7 +97,7 @@ export default function Home() {
         <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:pb-20">
           <div className="animate-rise animate-rise-4 relative mt-12 overflow-hidden rounded-[2rem] border border-border/60 shadow-soft">
             <img src={IMG.hero} alt="Vista aérea da Ilha de Deus cercada de mangue e rios" className="h-[280px] w-full object-cover sm:h-[400px]" crossOrigin="anonymous" />
-            <div className="absolute inset-0 bg-gradient-to-t from-primary/50 via-transparent to-transparent" />
+            <div className="absolute inset-0 from-primary/50 via-transparent to-transparent 0, 0, 1)] shadow-none" />
             <p className="absolute bottom-4 left-4 rounded-full bg-white/90 px-3.5 py-1.5 text-xs font-semibold text-primary shadow-sm backdrop-blur">{"Vista a\xE9rea da Ilha de Deus "}</p>
           </div>
         </div>
