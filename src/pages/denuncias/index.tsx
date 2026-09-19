@@ -3,16 +3,19 @@ import { Link } from "react-router-dom";
 import {
   ArrowRight,
   BadgeCheck,
+  Clock,
   HandHeart,
+  Landmark,
   Lock,
   MapPin,
   ScrollText,
   Send,
 } from "lucide-react";
 import { CATEGORIES, getCategory } from "@/lib/categories";
+import { STAGES } from "@/lib/stages";
 import { useData } from "@/components/data-provider";
 import { fmtShort } from "@/lib/format";
-import { ReportStatusPill } from "@/components/status";
+import { ReportStatusPill, StageNote } from "@/components/status";
 import { Button } from "@/components/ui/button";
 
 export default function Denuncias() {
@@ -28,9 +31,9 @@ export default function Denuncias() {
 
   const fluxo = [
     { icon: MapPin, title: "A comunidade registra", text: "no mapa, com local, descrição e foto opcional." },
-    { icon: BadgeCheck, title: "A equipe verifica", text: "cada relato antes de publicar — garantia de veracidade." },
-    { icon: ScrollText, title: "O ponto vira documento", text: "registro público que embasa cobranças e relatórios." },
-    { icon: HandHeart, title: "Vira ação e resposta", text: "mutirões, órgãos públicos e acompanhamento até resolver." },
+    { icon: BadgeCheck, title: "A equipe verifica", text: "cada relato é conferido antes de virar público." },
+    { icon: ScrollText, title: "O ponto vira documento", text: "local, data e histórico ficam consultáveis por qualquer pessoa." },
+    { icon: Landmark, title: "Vira cobrança com protocolo", text: "o caso é encaminhado ao órgão responsável e o número do protocolo fica público." },
   ];
 
   return (
@@ -47,15 +50,15 @@ export default function Denuncias() {
           <p className="mt-4 max-w-2xl text-muted-foreground">
             Denúncias socioambientais da Ilha de Deus registram problemas como
             descarte irregular, esgoto e degradação do mangue. O que parecia
-            "fofoca de vizinho" ganha documento, mapa e cobrança — até virar
-            resultado.
+            "fofoca de vizinho" ganha documento, mapa, protocolo e cobrança —
+            e a espera de cada caso passa a ser visível para todos.
           </p>
         </div>
       </section>
 
       <section className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6">
-        <h2 className="text-center font-display text-2xl font-semibold text-primary sm:text-3xl">
-          Do registro à resolução
+        <h2 className="text-center text-balance font-display text-2xl font-semibold text-primary sm:text-3xl">
+          Do registro à resposta — ou ao silêncio documentado
         </h2>
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {fluxo.map((f, i) => (
@@ -72,6 +75,11 @@ export default function Denuncias() {
           ))}
         </div>
 
+        <p className="mx-auto mt-6 max-w-3xl text-center text-sm text-muted-foreground">
+          E quando a resposta não chega, a comunidade age: os mutirões do
+          projeto saem justamente dos pontos que continuam abertos no mapa.
+        </p>
+
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Button asChild variant="leaf" size="lg">
             <Link to="/denunciar">
@@ -85,6 +93,49 @@ export default function Denuncias() {
               Ver tudo no mapa
             </Link>
           </Button>
+        </div>
+      </section>
+
+      <section className="bg-foam">
+        <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="text-balance font-display text-2xl font-semibold text-primary sm:text-3xl">
+              As etapas do acompanhamento
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              Cada ponto do mapa está em uma destas etapas — e todas são
+              verificáveis. Nada aqui é "achismo": a etapa só avança quando
+              existe registro (vistoria, protocolo, mutirão ou resposta
+              oficial).
+            </p>
+          </div>
+          <div className="mx-auto mt-10 grid max-w-5xl gap-3 sm:grid-cols-2">
+            {STAGES.map((s) => (
+              <div
+                key={s.id}
+                className="flex items-start gap-3 rounded-2xl border border-border/70 bg-card p-4 shadow-card/60"
+              >
+                <span
+                  className="mt-1 h-3 w-3 shrink-0 rounded-full"
+                  style={{ backgroundColor: s.color }}
+                />
+                <div>
+                  <p className="font-semibold text-foreground">{s.label}</p>
+                  <p className="text-sm text-muted-foreground">{s.meaning}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mx-auto mt-8 flex max-w-3xl items-start gap-3 rounded-2xl bg-sand p-5">
+            <Clock className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+            <p className="text-sm leading-relaxed text-foreground/85">
+              <b className="text-primary">Transparência também é sobre o que falta.</b>{" "}
+              O projeto registra, publica, protocola e cobra — mas não decide a
+              resposta dos órgãos públicos. Por isso o mapa mostra quantos dias
+              cada caso espera: o silêncio deixa de ser invisível.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -142,7 +193,7 @@ export default function Denuncias() {
                     <span className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white" style={{ backgroundColor: cat.color }}>
                       {cat.label}
                     </span>
-                    <ReportStatusPill status={r.status} resolved={r.resolved} />
+                    <ReportStatusPill status={r.status} stage={r.stage} />
                   </div>
                   <h3 className="mt-3 font-display text-base font-semibold leading-snug text-primary">
                     {r.title}
@@ -150,6 +201,7 @@ export default function Denuncias() {
                   <p className="mt-1.5 text-xs text-muted-foreground">
                     {r.reference} · {fmtShort(r.createdAt)}
                   </p>
+                  <StageNote report={r} />
                 </div>
               </article>
             );

@@ -1,6 +1,6 @@
 import { useMemo, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, CalendarDays, CheckCircle2, Droplets, Eye, GraduationCap, Handshake, Landmark, ListChecks, Lock, MapPin, Recycle, Send, ShieldCheck, Users, Waves } from "lucide-react";
+import { ArrowRight, CalendarDays, CheckCircle2, Clock, Droplets, Eye, GraduationCap, Handshake, Landmark, ListChecks, Lock, MapPin, Recycle, Send, ShieldCheck, Users, Waves } from "lucide-react";
 import { IMG } from "@/lib/images";
 import { useData } from "@/components/data-provider";
 import { computeStats } from "@/lib/stats";
@@ -30,11 +30,23 @@ export default function Home() {
     note: "pontos verificados e publicados",
     iconBg: "bg-leaf text-white"
   }, {
+    icon: Landmark,
+    value: stats.encaminhadas,
+    label: "encaminhadas a órgãos públicos",
+    note: "cada uma com órgão, data e protocolo",
+    iconBg: "bg-lagoon text-white"
+  }, {
+    icon: Clock,
+    value: stats.diasDeSilencio,
+    label: "dias de espera acumulados",
+    note: `${stats.semRetorno} casos sem resposta até agora`,
+    iconBg: "bg-destructive text-white"
+  }, {
     icon: CheckCircle2,
     value: stats.resolvidas,
     label: "resolvidas",
-    note: "com ação da comunidade e do poder público",
-    iconBg: "bg-lagoon text-white"
+    note: `${stats.resolvidasComunidade} em mutirão · ${stats.resolvidasOrgao} pelo órgão público`,
+    iconBg: "bg-primary text-white"
   }, {
     icon: Recycle,
     value: stats.mutiroes,
@@ -46,7 +58,7 @@ export default function Home() {
     value: stats.voluntarios,
     label: "voluntários mobilizados",
     note: "moradores, estudantes e parceiros",
-    iconBg: "bg-primary text-white"
+    iconBg: "bg-lagoon text-white"
   }];
   const steps = [{
     icon: Eye,
@@ -66,8 +78,8 @@ export default function Home() {
   }, {
     icon: ListChecks,
     step: "04",
-    title: "Acompanhar",
-    text: "O ponto vira acompanhamento: mutirões, registros e cobrança ao poder público até a resolução."
+    title: "Cobrar e acompanhar",
+    text: "O caso vai ao órgão responsável com protocolo e entra numa trilha pública — inclusive os dias de silêncio sem resposta."
   }];
   return <div>
       {/* HERO */}
@@ -97,7 +109,7 @@ export default function Home() {
         <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:pb-20">
           <div className="animate-rise animate-rise-4 relative mt-12 overflow-hidden rounded-[2rem] border border-border/60 shadow-soft">
             <img src={IMG.hero} alt="Vista aérea da Ilha de Deus cercada de mangue e rios" className="h-[280px] w-full object-cover sm:h-[400px]" crossOrigin="anonymous" />
-            <div className="absolute inset-0 from-primary/50 via-transparent to-transparent 0, 0, 1)] shadow-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-primary/60 via-primary/10 to-transparent" />
             <p className="absolute bottom-4 left-4 rounded-full bg-white/90 px-3.5 py-1.5 text-xs font-semibold text-primary shadow-sm backdrop-blur">{"Vista a\xE9rea da Ilha de Deus "}</p>
           </div>
         </div>
@@ -132,6 +144,13 @@ export default function Home() {
                 comunitária funciona — e pode se espalhar por outros bairros,
                 fazendo o poder público enxergar seu papel no combate ao
                 descarte irregular e na construção de um meio ambiente justo.
+              </p>
+              <p>
+                O projeto tem dois papéis. É <b>fiscal</b>: registra, documenta e
+                protocola cada caso no órgão responsável, cobrando resposta. E é{" "}
+                <b>articulador</b>: quando a resposta não chega, a comunidade age
+                por conta própria, com mutirões de limpeza, plantio e educação
+                ambiental.
               </p>
             </div>
             <ul className="mt-7 space-y-3">
@@ -184,11 +203,12 @@ export default function Home() {
               O território em números
             </h2>
             <p className="mt-4 text-muted-foreground">
-              Números vivos do mapa comunitário: o que a comunidade registrou e
-              o que já virou resultado.
+              Números vivos do mapa comunitário: o que a comunidade registrou, o
+              que foi protocolado nos órgãos públicos e o que já virou
+              resultado.
             </p>
           </div>
-          <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {numbers.map((n, i) => <div key={n.label} className={cn("animate-rise rounded-2xl border border-border/70 bg-card p-6 shadow-card transition hover:-translate-y-1", `animate-rise-${i + 1}`)}>
                 <span className={cn("grid h-11 w-11 place-items-center rounded-2xl", n.iconBg)}>
                   <n.icon className="h-5 w-5" />
@@ -264,8 +284,8 @@ export default function Home() {
               </h2>
               <p className="mt-3 max-w-xl text-muted-foreground">
                 Cada ponto publicado foi verificado antes de vir a público.
-                Explore as ocorrências por categoria e acompanhe o que já foi
-                resolvido.
+                Explore as ocorrências por categoria, veja a qual órgão cada
+                caso foi encaminhado e quantos dias de resposta já se passaram.
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
                 <Button asChild variant="leaf" size="lg">

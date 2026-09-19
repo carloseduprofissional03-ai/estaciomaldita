@@ -12,11 +12,12 @@ import "leaflet/dist/leaflet.css";
 import { Filter, Map as MapIcon, MapPin, Plus, Satellite, X } from "lucide-react";
 import { CATEGORIES, getCategory } from "@/lib/categories";
 import { ILHA_DE_DEUS_CENTER, DEFAULT_ZOOM, SATELLITE_URL, SATELLITE_ATTRIBUTION, TILE_URL, TILE_ATTRIBUTION } from "@/lib/geo";
+import { isOpenStage, isResolvedStage } from "@/lib/stages";
 import { useData } from "@/components/data-provider";
 import type { Report } from "@/lib/types";
 import { fmtShort } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { ReportStatusPill } from "@/components/status";
+import { ReportStatusPill, ReportTrail, StageNote } from "@/components/status";
 import { Button } from "@/components/ui/button";
 
 /* ---------- camadas de mapa ---------- */
@@ -30,9 +31,23 @@ const BASE_TILES: Record<BaseMode, { url: string; attribution: string }> = {
 
 /* ---------- marcador com brilho e pulso ---------- */
 
-function makeIcon(categoryColor: string, selected: boolean, resolved: boolean) {
+type MarkerKind = "open" | "silent" | "resolved";
+
+function makeIcon(categoryColor: string, selected: boolean, kind: MarkerKind) {
   const s = selected ? 34 : 24;
-  const color = resolved ? "#94a3b8" : categoryColor;
+  const color = kind === "resolved" ? "#94a3b8" : categoryColor;
+  const glow =
+    kind === "resolved"
+      ? "rgba(148,163,184,.85)"
+      : kind === "silent"
+        ? "rgba(194,84,63,.9)"
+        : color + "b3";
+  const inner =
+    kind === "resolved"
+      ? `<span style="color:#fff; font-size:${selected ? 14 : 11}px; font-weight:900; line-height:1">✓</span>`
+      : kind === "silent"
+        ? `<span style="color:#fff; font-size:${selected ? 14 : 11}px; font-weight:900; line-height:1">!</span>`
+        : `<span style="width:${selected ? 9 : 6}px; height:${selected ? 9 : 6}px; border-radius:9999px; background:rgba(255,255,255,.95); display:block"></span>`;
   return L.divIcon({
     className: "",
     html: `<span style="
@@ -40,17 +55,13 @@ function makeIcon(categoryColor: string, selected: boolean, resolved: boolean) {
       border-radius:9999px; background:${color};
       border:2px solid rgba(255,255,255,.95);
       box-shadow:0 0 0 ${selected ? 5 : 2}px rgba(255,255,255,.28),
-                 0 0 ${selected ? 26 : 14}px ${color === "#94a3b8" ? "rgba(148,163,184,.8)" : color + "b3"};
+                 0 0 ${selected ? 26 : 14}px ${glow};
       place-items:center;
     ">${
       selected
         ? `<span class="marker-ping" style="background:${color}"></span>`
         : ""
-    }${
-      resolved
-        ? `<span style="color:#fff; font-size:${selected ? 14 : 11}px; font-weight:900; line-height:1">✓</span>`
-        : `<span style="width:${selected ? 9 : 6}px; height:${selected ? 9 : 6}px; border-radius:9999px; background:rgba(255,255,255,.95); display:block"></span>`
-    }</span>`,
+    }${inner}</span>`,
     iconSize: [s, s],
     iconAnchor: [s / 2, s / 2],
   });
@@ -81,7 +92,14 @@ function MapClickReset({ onClear }: { onClear: () => void }) {
   return null;
 }
 
-type Situacao = "todas" | "ativas" | "resolvidas";
+type Situacao = "todas" | "abertas" | "sem_retorno" | "resolvidas";
+
+const SITUACOES: { id: Situacao; label: string }[] = [
+  { id: "todas", label: "Todas" },
+  { id: "abertas", label: "Em aberto" },
+  { id: "sem_retorno", label: "Sem retorno" },
+  { id: "resolvidas", label: "Resolvidas" },
+];
 
 export default function Mapa() {
   const { db } = useData();
@@ -104,15 +122,17 @@ export default function Mapa() {
     () =>
       reports.filter((r) => {
         if (!cats.has(r.category)) return false;
-        if (situacao === "ativas" && r.resolved) return false;
-        if (situacao === "resolvidas" && !r.resolved) return false;
+        if (situacao === "abertas" && !isOpenStage(r.stage)) return false;
+        if (situacao === "sem_retorno" && r.stage !== "sem_retorno") return false;
+        if (situacao === "resolvidas" && !isResolvedStage(r.stage)) return false;
         return true;
       }),
     [reports, cats, situacao],
   );
 
   const selected = visible.find((r) => r.id === selectedId) ?? null;
-  const resolvedCount = reports.filter((r) => r.resolved).length;
+  const resolvedCount = reports.filter((r) => isResolvedStage(r.stage)).length;
+  const silentCount = reports.filter((r) => r.stage === "sem_retorno").length;
   const focus = selected ? ([selected.lat, selected.lng] as [number, number]) : null;
 
   const catCounts = useMemo(() => {
@@ -122,7 +142,7 @@ export default function Mapa() {
       const cur = map.get(r.category);
       if (cur) {
         cur.total += 1;
-        if (!r.resolved) cur.ativas += 1;
+        if (!isResolvedStage(r.stage)) cur.ativas += 1;
       }
     }
     return map;
@@ -162,7 +182,8 @@ export default function Mapa() {
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
               Vista de satélite do território. Cada ponto foi verificado pela
-              equipe antes de virar público — clique num marcador para detalhes.
+              equipe e tem uma trilha pública: publicado, encaminhado ao órgão
+              com protocolo e, quando é o caso, o silêncio contado em dias.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -192,11 +213,17 @@ export default function Mapa() {
           <MapClickReset onClear={() => setSelectedId(null)} />
           {visible.map((r) => {
             const cat = getCategory(r.category);
+            const kind: MarkerKind =
+              r.stage === "sem_retorno"
+                ? "silent"
+                : isResolvedStage(r.stage)
+                  ? "resolved"
+                  : "open";
             return (
               <Marker
                 key={r.id}
                 position={[r.lat, r.lng]}
-                icon={makeIcon(cat.color, r.id === selectedId, r.resolved)}
+                icon={makeIcon(cat.color, r.id === selectedId, kind)}
                 eventHandlers={{
                   click: () => selectReport(r.id),
                 }}
@@ -209,19 +236,13 @@ export default function Mapa() {
         <div className="pointer-events-none absolute inset-x-0 top-3 z-[1200] flex justify-center px-3 sm:inset-x-auto sm:left-5 sm:right-auto sm:justify-start">
           <div className="pointer-events-auto w-full max-w-xl overflow-hidden rounded-2xl border border-white/60 bg-white/90 shadow-soft backdrop-blur-md">
             <div className="flex items-center gap-2 border-b border-border/60 px-3.5 py-2.5">
-              <span className="inline-flex items-center gap-1.5 font-display text-sm font-semibold text-primary">
+              <span className="inline-flex items-center gap-1.5 font-display text-sm font-semibold text-primary max-sm:hidden">
                 <Filter className="h-4 w-4 text-lagoon" />
                 Filtros
               </span>
 
               <div className="flex gap-1 rounded-full bg-secondary p-0.5">
-                {(
-                  [
-                    { id: "todas", label: "Todas" },
-                    { id: "ativas", label: "Ativas" },
-                    { id: "resolvidas", label: "Resolvidas" },
-                  ] as { id: Situacao; label: string }[]
-                ).map((s) => (
+                {SITUACOES.map((s) => (
                   <button
                     key={s.id}
                     type="button"
@@ -230,7 +251,7 @@ export default function Mapa() {
                       setSelectedId(null);
                     }}
                     className={cn(
-                      "rounded-full px-2 py-1 text-[11px] font-semibold transition",
+                      "shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold transition",
                       situacao === s.id
                         ? "bg-primary text-primary-foreground shadow-sm"
                         : "text-muted-foreground hover:text-primary",
@@ -242,7 +263,8 @@ export default function Mapa() {
               </div>
 
               <span className="ml-auto hidden text-[11px] font-medium text-muted-foreground sm:inline">
-                {visible.length} no mapa · {resolvedCount} resolvidas
+                {visible.length} no mapa · {silentCount} sem retorno ·{" "}
+                {resolvedCount} resolvidas
               </span>
             </div>
 
@@ -300,6 +322,22 @@ export default function Mapa() {
               />
             </div>
 
+            <div className="flex items-center gap-3 border-t border-border/60 px-3 py-1.5 text-[10px] font-medium text-muted-foreground sm:hidden">
+              <span className="inline-flex items-center gap-1">
+                <span className="grid h-3.5 w-3.5 place-items-center rounded-full bg-destructive text-[9px] font-bold text-white">
+                  !
+                </span>
+                sem retorno
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <span className="grid h-3.5 w-3.5 place-items-center rounded-full bg-slate-400 text-[9px] font-bold text-white">
+                  ✓
+                </span>
+                resolvido
+              </span>
+              <span className="ml-auto">{visible.length} no mapa</span>
+            </div>
+
             <div className="flex items-center gap-1 border-t border-border/60 px-3 py-2">
               <span className="mr-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Base
@@ -331,6 +369,20 @@ export default function Mapa() {
                   </button>
                 ))}
               </div>
+              <span className="ml-auto hidden items-center gap-2 text-[11px] text-muted-foreground sm:flex">
+                <span className="inline-flex items-center gap-1">
+                  <span className="grid h-3.5 w-3.5 place-items-center rounded-full bg-destructive text-[9px] font-bold text-white">
+                    !
+                  </span>
+                  sem retorno
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <span className="grid h-3.5 w-3.5 place-items-center rounded-full bg-slate-400 text-[9px] font-bold text-white">
+                    ✓
+                  </span>
+                  resolvido
+                </span>
+              </span>
             </div>
           </div>
         </div>
@@ -346,16 +398,25 @@ export default function Mapa() {
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-2 px-4 py-6 text-center sm:flex-row sm:gap-4 sm:px-6">
           <p className="text-sm text-muted-foreground">
             <b className="text-primary">Verificação antes de publicar:</b> todo
-            ponto passa pela equipe. Quem denuncia fica protegido — contatos
-            nunca aparecem no mapa.
+            ponto passa pela equipe e tem trilha pública, com órgão, protocolo e
+            dias de espera. Quem denuncia fica protegido — contatos nunca
+            aparecem no mapa.
           </p>
-          <Link
-            to="/denunciar"
-            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-ocean-soft"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Denunciar agora
-          </Link>
+          <div className="flex shrink-0 flex-wrap items-center justify-center gap-2">
+            <Link
+              to="/denunciar"
+              className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-ocean-soft"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Denunciar agora
+            </Link>
+            <Link
+              to="/alertas"
+              className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-lagoon transition hover:bg-ocean-soft"
+            >
+              Ver o mapa de alerta
+            </Link>
+          </div>
         </div>
       </div>
     </div>
@@ -402,7 +463,7 @@ function DetailPanel({ report, onClose }: { report: Report; onClose: () => void 
             <h3 className="font-display text-lg font-semibold leading-snug text-primary">
               {report.title}
             </h3>
-            <ReportStatusPill status={report.status} resolved={report.resolved} />
+            <ReportStatusPill status={report.status} stage={report.stage} />
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
             {report.reference} · {fmtShort(report.createdAt)}
@@ -410,11 +471,13 @@ function DetailPanel({ report, onClose }: { report: Report; onClose: () => void 
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             {report.description}
           </p>
-          {report.resolved && report.resolutionNote && (
-            <div className="mt-3 rounded-xl border border-accent bg-accent/40 p-3 text-sm text-accent-foreground">
-              <b>Acompanhamento:</b> {report.resolutionNote}
-            </div>
-          )}
+          <StageNote report={report} />
+          <div className="mt-4 rounded-2xl border border-border/70 bg-secondary/50 p-3.5">
+            <p className="mb-2 font-display text-[11px] font-bold uppercase tracking-wider text-primary">
+              Trilha de acompanhamento
+            </p>
+            <ReportTrail report={report} />
+          </div>
           <Link
             to="/denunciar"
             className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"

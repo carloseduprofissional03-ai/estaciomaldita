@@ -125,7 +125,9 @@ export default function Denunciar() {
         </h1>
         <p className="mt-4 max-w-lg text-muted-foreground">
           Nada é publicado sem conferência. Assim que a equipe verificar o
-          registro, o ponto aparece no mapa comunitário.
+          registro, o ponto aparece no mapa comunitário — e passa a ter uma
+          trilha pública: encaminhamento ao órgão responsável, número de
+          protocolo e contagem dos dias de espera.
         </p>
         <p className="mt-4 max-w-lg rounded-xl bg-sand px-4 py-3 text-xs leading-relaxed text-foreground/75">
           Nesta versão (sem servidor), o registro fica salvo neste navegador.
@@ -158,6 +160,16 @@ export default function Denunciar() {
           <p className="mt-3 max-w-2xl text-muted-foreground">
             Preencha o formulário e marque o local no mapa. Contato é opcional
             e <b>nunca publicado</b> — quem denuncia está protegido.
+          </p>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            Depois da verificação, o ponto entra na trilha pública de
+            acompanhamento: encaminhamento ao órgão responsável com número de
+            protocolo e contagem dos dias de espera. Viu algo acontecendo agora
+            e quer avisar rápido? Use o{" "}
+            <Link to="/alertas" className="font-semibold text-primary underline underline-offset-2">
+              mapa de alerta
+            </Link>
+            .
           </p>
         </div>
       </section>

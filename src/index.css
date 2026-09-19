@@ -124,6 +124,8 @@
   .animate-rise-2 { animation-delay: 180ms; }
   .animate-rise-3 { animation-delay: 270ms; }
   .animate-rise-4 { animation-delay: 360ms; }
+  .animate-rise-5 { animation-delay: 450ms; }
+  .animate-rise-6 { animation-delay: 540ms; }
 
   .leaflet-container {
     font-family: inherit;

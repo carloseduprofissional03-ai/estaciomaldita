@@ -5,11 +5,13 @@ import {
   ClipboardCheck,
   FilePlus2,
   Info,
+  ListChecks,
   Loader2,
   Lock,
   LogOut,
   MapPin,
   Megaphone,
+  Radio,
   Recycle,
   ShieldCheck,
   Trash2,
@@ -28,8 +30,20 @@ import {
 import { SITE } from "@/lib/site";
 import { getCategory } from "@/lib/categories";
 import { fmtShort, isUpcoming, todayISO } from "@/lib/format";
-import type { CleanupEvent, GalleryPhoto, NewsItem, Report } from "@/lib/types";
-import { ReportStatusPill, EventStatusPill } from "@/components/status";
+import type {
+  CleanupEvent,
+  GalleryPhoto,
+  NewsItem,
+  Report,
+  Stage,
+} from "@/lib/types";
+import { PRAZO_RESPOSTA_DIAS, STAGES } from "@/lib/stages";
+import {
+  EventStatusPill,
+  ReportStatusPill,
+  ReportTrail,
+} from "@/components/status";
+import { AlertasSetup } from "@/components/alertas-setup";
 import { ImageUpload } from "@/components/image-upload";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -300,7 +314,9 @@ function Login({ onLogin }: { onLogin: () => void }) {
 
 function Dashboard({ onLogout }: { onLogout: () => void }) {
   const { db, actions } = useData();
-  const [tab, setTab] = useState<"pendentes" | "publicados" | "criar">("pendentes");
+  const [tab, setTab] = useState<"pendentes" | "publicados" | "criar" | "alertas">(
+    "pendentes",
+  );
 
   const pending: ContentBundle = {
     reports: db.reports.filter((r) => r.status === "pending"),
@@ -356,11 +372,16 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
           <FilePlus2 className="h-4 w-4" />
           Criar conteúdo
         </TabBtn>
+        <TabBtn active={tab === "alertas"} onClick={() => setTab("alertas")}>
+          <Radio className="h-4 w-4" />
+          Mapa de alerta
+        </TabBtn>
       </div>
 
       {tab === "pendentes" && <Pendentes pending={pending} />}
       {tab === "publicados" && <Publicados approved={approved} />}
       {tab === "criar" && <Criar />}
+      {tab === "alertas" && <AlertasSetup />}
     </div>
   );
 }
@@ -417,9 +438,9 @@ function Pendentes({ pending }: { pending: ContentBundle }) {
                   <Button
                     size="sm"
                     variant="leaf"
-                    onClick={() => actions.updateReport(r.id, { status: "approved" })}
+                    onClick={() => actions.approveReport(r.id)}
                   >
-                    <CheckCircle2 className="h-4 w-4" /> Aprovar
+                    <CheckCircle2 className="h-4 w-4" /> Aprovar e publicar
                   </Button>
                   <Button
                     size="sm"
@@ -632,13 +653,53 @@ function Row({
 
 function Publicados({ approved }: { approved: ContentBundle }) {
   const { actions } = useData();
-  const [resolveId, setResolveId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [stage, setStage] = useState<Stage>("encaminhado");
   const [note, setNote] = useState("");
+  const [agency, setAgency] = useState("");
+  const [protocol, setProtocol] = useState("");
+  const [err, setErr] = useState<string | null>(null);
 
-  function markResolved(id: string) {
-    actions.updateReport(id, { resolved: true, resolutionNote: note.trim() });
-    setResolveId(null);
+  const SUGESTAO: Record<Stage, string> = {
+    registrado: "Relato recebido novamente pela equipe.",
+    publicado: "Verificado pela equipe e publicado no mapa.",
+    encaminhado: "Caso protocolado no órgão responsável.",
+    sem_retorno: "Prazo de resposta encerrado sem manifestação do órgão.",
+    resolvido_comunidade: "Problema resolvido em mutirão da comunidade.",
+    resolvido_orgao: "O órgão respondeu e resolveu o problema.",
+    nao_verificavel:
+      "Relato não confirmado no local nem com quem registrou.",
+  };
+
+  function openPanel(r: Report) {
+    if (openId === r.id) return setOpenId(null);
+    setOpenId(r.id);
+    setStage(r.stage === "publicado" ? "encaminhado" : r.stage);
     setNote("");
+    setAgency("");
+    setProtocol("");
+    setErr(null);
+  }
+
+  function escolherEtapa(s: Stage) {
+    setStage(s);
+    setNote((prev) => (prev.trim() ? prev : SUGESTAO[s]));
+  }
+
+  function registrar(r: Report) {
+    if (stage === "encaminhado" && (!agency.trim() || !protocol.trim())) {
+      return setErr(
+        "Para registrar o encaminhamento, informe o órgão e o número do protocolo.",
+      );
+    }
+    actions.advanceReport(r.id, {
+      stage,
+      note: note.trim() || undefined,
+      to: agency.trim() || undefined,
+      protocol: protocol.trim() || undefined,
+    });
+    setOpenId(null);
+    setErr(null);
   }
 
   return (
@@ -647,47 +708,35 @@ function Publicados({ approved }: { approved: ContentBundle }) {
         <h2 className="font-display text-lg font-semibold text-primary">
           Denúncias publicadas ({approved.reports.length})
         </h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Cada denúncia tem uma trilha. Ao registrar a próxima etapa, informe o
+          que aconteceu — órgão, protocolo e observação ficam públicos no mapa.
+        </p>
         <div className="mt-3 space-y-3">
           {approved.reports.map((r) => (
             <div key={r.id} className="rounded-2xl border border-border/70 bg-card p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <ReportStatusPill status={r.status} resolved={r.resolved} />
+                    <ReportStatusPill status={r.status} stage={r.stage} />
                     <span className="text-xs text-muted-foreground">
                       {getCategory(r.category).label} · {fmtShort(r.createdAt)}
                     </span>
                   </div>
                   <p className="mt-1.5 font-semibold text-foreground">{r.title}</p>
-                  {r.resolved && r.resolutionNote && (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      <b className="text-leaf-deep">Resolvida:</b> {r.resolutionNote}
-                    </p>
+                  {r.note && (
+                    <p className="mt-1 text-xs text-muted-foreground">{r.note}</p>
                   )}
                 </div>
                 <div className="flex shrink-0 flex-wrap gap-2">
-                  {!r.resolved ? (
-                    <Button
-                      size="sm"
-                      variant="leaf"
-                      onClick={() => setResolveId(resolveId === r.id ? null : r.id)}
-                    >
-                      <CheckCircle2 className="h-4 w-4" /> Marcar resolvida
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() =>
-                        actions.updateReport(r.id, {
-                          resolved: false,
-                          resolutionNote: undefined,
-                        })
-                      }
-                    >
-                      Reabrir
-                    </Button>
-                  )}
+                  <Button
+                    size="sm"
+                    variant={openId === r.id ? "secondary" : "ocean"}
+                    onClick={() => openPanel(r)}
+                  >
+                    <ListChecks className="h-4 w-4" />
+                    {openId === r.id ? "Fechar" : "Registrar etapa"}
+                  </Button>
                   <Button
                     size="sm"
                     variant="outline"
@@ -698,18 +747,78 @@ function Publicados({ approved }: { approved: ContentBundle }) {
                   </Button>
                 </div>
               </div>
-              {resolveId === r.id && (
-                <div className="mt-3 flex flex-wrap gap-2 border-t border-border/60 pt-3">
-                  <input
-                    autoFocus
-                    className="field min-w-[220px] flex-1"
-                    placeholder="O que foi feito para resolver? (ex.: prefeitura removeu o entulho)"
+
+              <div className="mt-3 rounded-2xl bg-secondary/50 p-3.5">
+                <ReportTrail report={r} />
+              </div>
+
+              {openId === r.id && (
+                <div className="mt-3 border-t border-border/60 pt-3">
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Nova etapa
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {STAGES.filter((s) => s.id !== "registrado").map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => escolherEtapa(s.id)}
+                        className={cn(
+                          "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition",
+                          stage === s.id
+                            ? "border-transparent text-white"
+                            : "border-border bg-card text-muted-foreground hover:bg-secondary",
+                        )}
+                        style={
+                          stage === s.id ? { backgroundColor: s.color } : undefined
+                        }
+                      >
+                        <span
+                          className="h-2 w-2 rounded-full"
+                          style={{
+                            backgroundColor:
+                              stage === s.id ? "rgba(255,255,255,.9)" : s.color,
+                          }}
+                        />
+                        {s.short}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <input
+                      className="field"
+                      placeholder="Órgão (ex.: Secretaria municipal de meio ambiente)"
+                      value={agency}
+                      onChange={(e) => setAgency(e.target.value)}
+                    />
+                    <input
+                      className="field"
+                      placeholder="Número do protocolo"
+                      value={protocol}
+                      onChange={(e) => setProtocol(e.target.value)}
+                    />
+                  </div>
+                  <textarea
+                    className="field mt-2 resize-none"
+                    rows={2}
+                    placeholder="Observação pública sobre esta etapa"
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                   />
-                  <Button size="sm" variant="leaf" onClick={() => markResolved(r.id)}>
-                    Confirmar resolução
-                  </Button>
+                  {err && <p className="mt-2 text-sm text-destructive">{err}</p>}
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <Button size="sm" variant="leaf" onClick={() => registrar(r)}>
+                      <CheckCircle2 className="h-4 w-4" /> Salvar etapa
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => setOpenId(null)}>
+                      Cancelar
+                    </Button>
+                    <p className="text-[11px] text-muted-foreground">
+                      Casos acima de {PRAZO_RESPOSTA_DIAS} dias sem resposta entram
+                      nas métricas de silêncio.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>

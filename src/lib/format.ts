@@ -65,3 +65,11 @@ export function todayISO(): string {
 export function isoNow(): string {
   return new Date(Date.now() + 60 * 60 * 1000).toISOString();
 }
+
+/** Dias corridos desde uma data ISO. */
+export function daysSince(iso: string): number {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return 0;
+  return Math.max(0, Math.floor((Date.now() - d.getTime()) / 86_400_000));
+}
+

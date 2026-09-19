@@ -1,9 +1,188 @@
-import type { AppDB } from "./types";
+import type { AppDB, Report, Stage, TrailEntry } from "./types";
 import { IMG } from "./images";
 
 // Conteúdo do site (versão sem nuvem). Os mutirões são definidos pela equipe
 // do projeto e ficam fixos aqui; quando um novo mutirão for publicado, ele é
 // adicionado neste arquivo.
+
+type SeedReport = Omit<Report, "stage" | "stageAt" | "trail" | "note">;
+
+function step(
+  stage: Stage,
+  at: string,
+  extra: { note?: string; to?: string; protocol?: string } = {},
+): TrailEntry {
+  return { stage, at, ...extra };
+}
+
+/*
+ * Trilha de acompanhamento de cada denúncia: o que o projeto fez e quando.
+ * Órgão, data e protocolo fazem parte do registro público.
+ */
+const STEPS: Record<string, { entries: TrailEntry[]; note?: string }> = {
+  r1: {
+    entries: [
+      step("registrado", "2026-01-18T11:20:00.000Z", {
+        note: "Relato recebido pelo formulário do site.",
+      }),
+      step("publicado", "2026-01-19T09:10:00.000Z", {
+        note: "Vistoria da equipe confirmou o entulho na via.",
+      }),
+      step("encaminhado", "2026-01-20T14:30:00.000Z", {
+        to: "Autarquia de limpeza urbana — Prefeitura do Recife",
+        protocol: "2026.01.014782",
+        note: "Pedido formal de remoção do entulho.",
+      }),
+      step("resolvido_orgao", "2026-01-27T16:10:00.000Z", {
+        note: "Equipe da limpeza urbana retirou o entulho. Local segue monitorado.",
+      }),
+    ],
+    note: "Entulho retirado 9 dias após o registro, depois do encaminhamento com protocolo.",
+  },
+  r2: {
+    entries: [
+      step("registrado", "2026-02-09T14:02:00.000Z", {
+        note: "Relato recebido pelo formulário do site.",
+      }),
+      step("publicado", "2026-02-10T10:20:00.000Z", {
+        note: "Vazamento confirmado no local, com registro fotográfico.",
+      }),
+      step("encaminhado", "2026-02-12T09:15:00.000Z", {
+        to: "Agência estadual de saneamento",
+        protocol: "2026.02.008913",
+        note: "Denúncia de esgoto a céu aberto desaguando no mangue.",
+      }),
+      step("sem_retorno", "2026-03-15T08:00:00.000Z", {
+        note: "Prazo de 30 dias encerrado sem manifestação do órgão.",
+      }),
+    ],
+    note: "Encaminhado em fev/2026 e cobrado novamente em maio. Sem resposta até hoje.",
+  },
+  r3: {
+    entries: [
+      step("registrado", "2026-03-14T09:40:00.000Z", {
+        note: "Relato recebido pelo formulário do site.",
+      }),
+      step("publicado", "2026-03-15T11:00:00.000Z", {
+        note: "Vistoria confirmou o acúmulo de lixo atrás do campo.",
+      }),
+      step("encaminhado", "2026-03-18T10:00:00.000Z", {
+        to: "Autarquia de limpeza urbana — Prefeitura do Recife",
+        protocol: "2026.03.021004",
+        note: "Pedido de limpeza e de novo ponto de coleta no local.",
+      }),
+      step("resolvido_comunidade", "2026-03-28T11:30:00.000Z", {
+        note: "Mutirão da comunidade recolheu o lixo e instalou placa de conscientização.",
+      }),
+    ],
+    note: "Resolvido em mutirão; o pedido de novo ponto de coleta segue sem resposta.",
+  },
+  r4: {
+    entries: [
+      step("registrado", "2026-04-02T16:30:00.000Z", {
+        note: "Relato recebido com registro de dois moradores.",
+      }),
+      step("publicado", "2026-04-03T09:00:00.000Z", {
+        note: "Mancha registrada em foto no dia seguinte.",
+      }),
+      step("encaminhado", "2026-04-07T10:20:00.000Z", {
+        to: "Agência estadual de meio ambiente",
+        protocol: "2026.04.030118",
+        note: "Comunicação de possível descarte de óleo por embarcação.",
+      }),
+      step("sem_retorno", "2026-05-10T08:00:00.000Z", {
+        note: "Prazo encerrado sem resposta; o caso segue no relatório do projeto.",
+      }),
+    ],
+    note: "Sem resposta do órgão; o caso continua no relatório de fiscalização.",
+  },
+  r5: {
+    entries: [
+      step("registrado", "2026-05-21T10:15:00.000Z", {
+        note: "Relato recebido pelo formulário do site.",
+      }),
+      step("publicado", "2026-05-22T09:30:00.000Z", {
+        note: "Vistoria confirmou o corte de vegetação em área de preservação.",
+      }),
+      step("encaminhado", "2026-05-26T11:00:00.000Z", {
+        to: "Secretaria municipal de meio ambiente",
+        protocol: "2026.05.027760",
+        note: "Solicitação de fiscalização da área de manguezal.",
+      }),
+      step("sem_retorno", "2026-06-26T08:00:00.000Z", {
+        note: "Prazo encerrado sem resposta.",
+      }),
+    ],
+    note: "Caso levado também ao Ministério Público em julho de 2026, sem retorno até agora.",
+  },
+  r6: {
+    entries: [
+      step("registrado", "2026-06-11T08:50:00.000Z", {
+        note: "Relato recebido pelo formulário do site.",
+      }),
+      step("publicado", "2026-06-12T10:00:00.000Z", {
+        note: "Vistoria da equipe confirmou o avanço do aterro.",
+      }),
+      step("encaminhado", "2026-06-15T09:40:00.000Z", {
+        to: "Secretaria municipal de meio ambiente",
+        protocol: "2026.06.033901",
+        note: "Denúncia de aterro avançando sobre área alagada.",
+      }),
+      step("resolvido_orgao", "2026-07-02T15:20:00.000Z", {
+        note: "Fiscalização notificou o responsável e o avanço do aterro foi interrompido.",
+      }),
+    ],
+    note: "Avanço do aterro interrompido 17 dias depois do encaminhamento.",
+  },
+  r7: {
+    entries: [
+      step("registrado", "2026-07-30T18:05:00.000Z", {
+        note: "Relato recebido pelo formulário do site.",
+      }),
+      step("publicado", "2026-07-31T09:00:00.000Z", {
+        note: "Registro fotográfico feito no local.",
+      }),
+      step("encaminhado", "2026-08-03T10:00:00.000Z", {
+        to: "Secretaria municipal de meio ambiente",
+        protocol: "2026.07.041223",
+        note: "Pedido de fiscalização noturna na beirada do mangue.",
+      }),
+      step("encaminhado", "2026-09-05T09:30:00.000Z", {
+        note: "O órgão respondeu pedindo prazo complementar de 60 dias para a fiscalização.",
+      }),
+    ],
+    note: "Aguardando resposta após o órgão pedir prazo complementar.",
+  },
+  r8: {
+    entries: [
+      step("registrado", "2026-08-15T07:20:00.000Z", {
+        note: "Relato recebido pelo formulário do site.",
+      }),
+      step("publicado", "2026-08-16T09:00:00.000Z", {
+        note: "Vistoria confirmou o acúmulo de resíduos na foz do canal.",
+      }),
+      step("resolvido_comunidade", "2026-08-22T11:00:00.000Z", {
+        note: "Ação de limpeza com voluntários retirou cerca de 60 sacos de resíduos.",
+      }),
+    ],
+    note: "Limpeza feita em mutirão; o estudo da barreira de contenção segue em andamento.",
+  },
+};
+
+/** Aplica a trilha registrada à denúncia e define a etapa atual. */
+function comRastro(r: SeedReport): Report {
+  const h = STEPS[r.id] ?? {
+    entries: [step("registrado", r.createdAt, { note: "Relato recebido." })],
+  };
+  const last = h.entries[h.entries.length - 1];
+  return {
+    ...r,
+    trail: h.entries,
+    stage: last.stage,
+    stageAt: last.at,
+    note: h.note,
+  };
+}
 
 export function buildSeedDb(): AppDB {
   return {
@@ -19,9 +198,6 @@ export function buildSeedDb(): AppDB {
         lng: -34.90512,
         photoUrl: IMG.residuos,
         status: "approved",
-        resolved: true,
-        resolutionNote:
-          "Equipe da limpeza urbana retirou o entulho após a denúncia encaminhada pelo projeto. Local segue monitorado.",
         createdAt: "2026-01-18T11:20:00.000Z",
       },
       {
@@ -34,7 +210,6 @@ export function buildSeedDb(): AppDB {
         lat: -8.0851,
         lng: -34.9056,
         status: "approved",
-        resolved: false,
         createdAt: "2026-02-09T14:02:00.000Z",
       },
       {
@@ -47,9 +222,6 @@ export function buildSeedDb(): AppDB {
         lat: -8.0886,
         lng: -34.9021,
         status: "approved",
-        resolved: true,
-        resolutionNote:
-          "Mutirão da comunidade recolheu o lixo e a equipe instalou placa de conscientização. Novo ponto de coleta foi solicitado à prefeitura.",
         createdAt: "2026-03-14T09:40:00.000Z",
       },
       {
@@ -62,7 +234,6 @@ export function buildSeedDb(): AppDB {
         lat: -8.0846,
         lng: -34.9013,
         status: "approved",
-        resolved: false,
         createdAt: "2026-04-02T16:30:00.000Z",
       },
       {
@@ -76,7 +247,6 @@ export function buildSeedDb(): AppDB {
         lng: -34.9036,
         photoUrl: IMG.mangue,
         status: "approved",
-        resolved: false,
         createdAt: "2026-05-21T10:15:00.000Z",
       },
       {
@@ -89,9 +259,6 @@ export function buildSeedDb(): AppDB {
         lat: -8.0862,
         lng: -34.9007,
         status: "approved",
-        resolved: true,
-        resolutionNote:
-          "Ocupação identificada e notificada aos órgãos de fiscalização. O avanço do aterro foi interrompido enquanto a situação é avaliada.",
         createdAt: "2026-06-11T08:50:00.000Z",
       },
       {
@@ -104,7 +271,6 @@ export function buildSeedDb(): AppDB {
         lat: -8.088,
         lng: -34.904,
         status: "approved",
-        resolved: false,
         createdAt: "2026-07-30T18:05:00.000Z",
       },
       {
@@ -117,9 +283,6 @@ export function buildSeedDb(): AppDB {
         lat: -8.0849,
         lng: -34.9029,
         status: "approved",
-        resolved: true,
-        resolutionNote:
-          "Ação de limpeza com voluntários retirou cerca de 60 sacos de resíduos. Estudo de barreira de contenção em andamento.",
         createdAt: "2026-08-15T07:20:00.000Z",
       },
       {
@@ -132,7 +295,6 @@ export function buildSeedDb(): AppDB {
         lat: -8.0873,
         lng: -34.9012,
         status: "pending",
-        resolved: false,
         createdAt: "2026-09-01T13:10:00.000Z",
       },
       {
@@ -145,10 +307,9 @@ export function buildSeedDb(): AppDB {
         lat: -8.0857,
         lng: -34.9038,
         status: "pending",
-        resolved: false,
         createdAt: "2026-09-02T09:25:00.000Z",
       },
-    ],
+    ].map(comRastro),
     events: [
       {
         id: "e1",

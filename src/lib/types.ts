@@ -1,3 +1,7 @@
+import type { Stage, TrailEntry } from "./stages";
+
+export type { Stage, TrailEntry };
+
 export type ReportStatus = "pending" | "approved" | "rejected";
 export type EventStatus = "pending" | "approved" | "cancelled";
 export type MediaStatus = "pending" | "approved";
@@ -13,8 +17,14 @@ export interface Report {
   photoUrl?: string;
   contact?: string;
   status: ReportStatus;
-  resolved: boolean;
-  resolutionNote?: string;
+  /** Etapa atual da trilha de acompanhamento. */
+  stage: Stage;
+  /** Data em que a etapa atual foi registrada. */
+  stageAt: string;
+  /** Histórico do que o projeto fez, em ordem cronológica. */
+  trail: TrailEntry[];
+  /** Resumo público do acompanhamento (usado nos cards). */
+  note?: string;
   createdAt: string;
 }
 
@@ -82,6 +92,14 @@ export interface NewReportInput {
   lng: number;
   photoUrl?: string;
   contact?: string;
+}
+
+/** Nova etapa registrada na trilha de uma denúncia. */
+export interface NewTrailEntry {
+  stage: Stage;
+  note?: string;
+  to?: string;
+  protocol?: string;
 }
 
 export interface NewEventInput {

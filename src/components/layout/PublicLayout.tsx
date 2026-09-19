@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 const NAV = [
   { to: "/", label: "Início" },
   { to: "/mapa", label: "Mapa" },
+  { to: "/alertas", label: "Alertas" },
   { to: "/denuncias", label: "Denúncias" },
   { to: "/voluntariado", label: "Voluntariado" },
   { to: "/noticias", label: "Notícias" },
@@ -50,7 +51,7 @@ export function PublicLayout() {
                 end={item.to === "/"}
                 className={({ isActive }) =>
                   cn(
-                    "rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+                    "rounded-full px-2.5 py-1.5 text-[13px] font-medium transition-colors",
                     isActive
                       ? "bg-ocean-soft text-primary"
                       : "text-muted-foreground hover:bg-secondary hover:text-primary",
@@ -134,6 +135,7 @@ export function PublicLayout() {
               </p>
               <ul className="mt-4 space-y-2.5 text-sm text-foreground/75">
                 <li><Link className="transition hover:text-primary" to="/mapa">Mapa de denúncias</Link></li>
+                <li><Link className="transition hover:text-primary" to="/alertas">Mapa de alerta</Link></li>
                 <li><Link className="transition hover:text-primary" to="/denuncias">Como denunciar</Link></li>
                 <li><Link className="transition hover:text-primary" to="/voluntariado">Voluntariado</Link></li>
                 <li><Link className="transition hover:text-primary" to="/impacto">Impacto e relatórios</Link></li>
