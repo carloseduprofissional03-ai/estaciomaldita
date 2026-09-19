@@ -102,9 +102,7 @@ export default function Home() {
           <div className="animate-rise animate-rise-4 relative mt-12 overflow-hidden rounded-[2rem] border border-border/60 shadow-soft">
             <img src={IMG.hero} alt="Vista aérea da Ilha de Deus cercada de mangue e rios" className="h-[280px] w-full object-cover sm:h-[400px]" crossOrigin="anonymous" />
             <div className="absolute inset-0 bg-gradient-to-t from-primary/50 via-transparent to-transparent" />
-            <p className="absolute bottom-4 left-4 rounded-full bg-white/90 px-3.5 py-1.5 text-xs font-semibold text-primary shadow-sm backdrop-blur">
-              Vista aérea da Ilha de Deus · mangue e rio
-            </p>
+            <p className="absolute bottom-4 left-4 rounded-full bg-white/90 px-3.5 py-1.5 text-xs font-semibold text-primary shadow-sm backdrop-blur">{"Vista a\xE9rea da Ilha de Deus "}</p>
           </div>
         </div>
       </section>
