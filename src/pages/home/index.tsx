@@ -113,7 +113,7 @@ export default function Home() {
       <section className="border-b border-border/60 bg-foam">
         <div className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 py-16 text-center sm:px-6 lg:py-20">
           <Waves className="h-8 w-8 text-primary/20" />
-          <p className="mt-6 text-balance text-2xl leading-snug sm:text-3xl York'] Sans'] Jakarta Sans Variable\", \"DM Sans Variable\", ui-sans-serif, system-ui, sans-serif'] font-['\"Plus Jakarta Sans Variable\", \"DM Sans Variable\", ui-sans-serif, system-ui, sans-serif'] text-center font-[700] text-[#122C49FF]">{"A Ilha de Deus \xE9 parte do patrim\xF4nio natural do Recife: mangue, rio e gente que se sustentam juntos. Proteger esse territ\xF3rio \xE9 proteger a cidade inteira."}</p>
+          <p className="mt-6 text-balance font-display text-2xl font-semibold leading-snug text-primary sm:text-3xl">{"A Ilha de Deus \xE9 parte do patrim\xF4nio natural do Recife: mangue, rio e gente que se sustentam juntos. Proteger esse territ\xF3rio \xE9 proteger a cidade inteira."}</p>
         </div>
       </section>
 
