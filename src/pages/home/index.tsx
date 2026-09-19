@@ -1,111 +1,75 @@
 import { useMemo, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import {
-  ArrowRight,
-  CalendarDays,
-  CheckCircle2,
-  Droplets,
-  Eye,
-  GraduationCap,
-  Handshake,
-  Landmark,
-  ListChecks,
-  Lock,
-  MapPin,
-  Recycle,
-  Send,
-  ShieldCheck,
-  Users,
-  Waves,
-} from "lucide-react";
+import { ArrowRight, CalendarDays, CheckCircle2, Droplets, Eye, GraduationCap, Handshake, Landmark, ListChecks, Lock, MapPin, Recycle, Send, ShieldCheck, Users, Waves } from "lucide-react";
 import { IMG } from "@/lib/images";
 import { useData } from "@/components/data-provider";
 import { computeStats } from "@/lib/stats";
 import { fmtShort } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-
-function Eyebrow({ children }: { children: ReactNode }) {
-  return (
-    <p className="mb-3 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-lagoon">
+function Eyebrow({
+  children
+}: {
+  children: ReactNode;
+}) {
+  return <p className="mb-3 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-lagoon">
       <span className="h-px w-6 bg-lagoon/50" />
       {children}
-    </p>
-  );
+    </p>;
 }
-
 export default function Home() {
-  const { db } = useData();
+  const {
+    db
+  } = useData();
   const stats = useMemo(() => computeStats(db), [db]);
-  const latestNews = useMemo(
-    () =>
-      db.news
-        .filter((n) => n.status === "approved")
-        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-        .slice(0, 3),
-    [db.news],
-  );
-
-  const numbers = [
-    {
-      icon: MapPin,
-      value: stats.totalDenuncias,
-      label: "denúncias mapeadas",
-      note: "pontos verificados e publicados",
-      iconBg: "bg-leaf text-white",
-    },
-    {
-      icon: CheckCircle2,
-      value: stats.resolvidas,
-      label: "resolvidas",
-      note: "com ação da comunidade e do poder público",
-      iconBg: "bg-lagoon text-white",
-    },
-    {
-      icon: Recycle,
-      value: stats.mutiroes,
-      label: "mutirões e ações",
-      note: "limpeza, plantio e educação ambiental",
-      iconBg: "bg-leaf text-white",
-    },
-    {
-      icon: Users,
-      value: stats.voluntarios,
-      label: "voluntários mobilizados",
-      note: "moradores, estudantes e parceiros",
-      iconBg: "bg-primary text-white",
-    },
-  ];
-
-  const steps = [
-    {
-      icon: Eye,
-      step: "01",
-      title: "Observar",
-      text: "Quem vive o território percebe o que muda: um entulho novo, uma mancha no rio, um corte no mangue.",
-    },
-    {
-      icon: Send,
-      step: "02",
-      title: "Denunciar",
-      text: "Qualquer pessoa registra o ponto no mapa com foto, localização e descrição. Contato é opcional.",
-    },
-    {
-      icon: ShieldCheck,
-      step: "03",
-      title: "Verificar e publicar",
-      text: "A equipe confere cada relato antes de virar público. Nada é publicado sem verificação.",
-    },
-    {
-      icon: ListChecks,
-      step: "04",
-      title: "Acompanhar",
-      text: "O ponto vira acompanhamento: mutirões, registros e cobrança ao poder público até a resolução.",
-    },
-  ];
-
-  return (
-    <div>
+  const latestNews = useMemo(() => db.news.filter(n => n.status === "approved").sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 3), [db.news]);
+  const numbers = [{
+    icon: MapPin,
+    value: stats.totalDenuncias,
+    label: "denúncias mapeadas",
+    note: "pontos verificados e publicados",
+    iconBg: "bg-leaf text-white"
+  }, {
+    icon: CheckCircle2,
+    value: stats.resolvidas,
+    label: "resolvidas",
+    note: "com ação da comunidade e do poder público",
+    iconBg: "bg-lagoon text-white"
+  }, {
+    icon: Recycle,
+    value: stats.mutiroes,
+    label: "mutirões e ações",
+    note: "limpeza, plantio e educação ambiental",
+    iconBg: "bg-leaf text-white"
+  }, {
+    icon: Users,
+    value: stats.voluntarios,
+    label: "voluntários mobilizados",
+    note: "moradores, estudantes e parceiros",
+    iconBg: "bg-primary text-white"
+  }];
+  const steps = [{
+    icon: Eye,
+    step: "01",
+    title: "Observar",
+    text: "Quem vive o território percebe o que muda: um entulho novo, uma mancha no rio, um corte no mangue."
+  }, {
+    icon: Send,
+    step: "02",
+    title: "Denunciar",
+    text: "Qualquer pessoa registra o ponto no mapa com foto, localização e descrição. Contato é opcional."
+  }, {
+    icon: ShieldCheck,
+    step: "03",
+    title: "Verificar e publicar",
+    text: "A equipe confere cada relato antes de virar público. Nada é publicado sem verificação."
+  }, {
+    icon: ListChecks,
+    step: "04",
+    title: "Acompanhar",
+    text: "O ponto vira acompanhamento: mutirões, registros e cobrança ao poder público até a resolução."
+  }];
+  return <div>
       {/* HERO */}
       <section className="bg-gradient-to-b from-foam to-background">
         <div className="mx-auto w-full max-w-7xl px-4 pt-16 text-center sm:px-6 lg:pt-24">
@@ -136,12 +100,7 @@ export default function Home() {
         </div>
         <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:pb-20">
           <div className="animate-rise animate-rise-4 relative mt-12 overflow-hidden rounded-[2rem] border border-border/60 shadow-soft">
-            <img
-              src={IMG.hero}
-              alt="Vista aérea da Ilha de Deus cercada de mangue e rios"
-              className="h-[280px] w-full object-cover sm:h-[400px]"
-              crossOrigin="anonymous"
-            />
+            <img src={IMG.hero} alt="Vista aérea da Ilha de Deus cercada de mangue e rios" className="h-[280px] w-full object-cover sm:h-[400px]" crossOrigin="anonymous" />
             <div className="absolute inset-0 bg-gradient-to-t from-primary/50 via-transparent to-transparent" />
             <p className="absolute bottom-4 left-4 rounded-full bg-white/90 px-3.5 py-1.5 text-xs font-semibold text-primary shadow-sm backdrop-blur">
               Vista aérea da Ilha de Deus · mangue e rio
@@ -154,11 +113,7 @@ export default function Home() {
       <section className="border-b border-border/60 bg-foam">
         <div className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 py-16 text-center sm:px-6 lg:py-20">
           <Waves className="h-8 w-8 text-primary/20" />
-          <p className="mt-6 text-balance font-display text-2xl font-bold leading-snug text-primary sm:text-3xl">
-            “A Ilha de Deus é parte do patrimônio natural do Recife: mangue,
-            rio e gente que se sustentam juntos. Proteger esse território é
-            proteger a cidade inteira.”
-          </p>
+          <p className="mt-6 text-balance text-2xl leading-snug sm:text-3xl York'] Sans'] Jakarta Sans Variable\", \"DM Sans Variable\", ui-sans-serif, system-ui, sans-serif'] font-['\"Plus Jakarta Sans Variable\", \"DM Sans Variable\", ui-sans-serif, system-ui, sans-serif'] text-center font-[700] text-[#122C49FF]">{"A Ilha de Deus \xE9 parte do patrim\xF4nio natural do Recife: mangue, rio e gente que se sustentam juntos. Proteger esse territ\xF3rio \xE9 proteger a cidade inteira."}</p>
         </div>
       </section>
 
@@ -186,24 +141,19 @@ export default function Home() {
               </p>
             </div>
             <ul className="mt-7 space-y-3">
-              {[
-                {
-                  icon: ShieldCheck,
-                  title: "Verificação antes de publicar",
-                  text: "cada ponto do mapa é conferido pela equipe",
-                },
-                {
-                  icon: Recycle,
-                  title: "Mutirões e voluntariado",
-                  text: "a denúncia vira ação concreta da comunidade",
-                },
-                {
-                  icon: Landmark,
-                  title: "Dados para o poder público",
-                  text: "registro público que exige resposta",
-                },
-              ].map((f) => (
-                <li key={f.title} className="flex items-start gap-3">
+              {[{
+              icon: ShieldCheck,
+              title: "Verificação antes de publicar",
+              text: "cada ponto do mapa é conferido pela equipe"
+            }, {
+              icon: Recycle,
+              title: "Mutirões e voluntariado",
+              text: "a denúncia vira ação concreta da comunidade"
+            }, {
+              icon: Landmark,
+              title: "Dados para o poder público",
+              text: "registro público que exige resposta"
+            }].map(f => <li key={f.title} className="flex items-start gap-3">
                   <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-ocean-soft text-primary">
                     <f.icon className="h-4 w-4" />
                   </span>
@@ -211,26 +161,15 @@ export default function Home() {
                     <p className="font-semibold text-foreground">{f.title}</p>
                     <p className="text-sm text-muted-foreground">{f.text}</p>
                   </div>
-                </li>
-              ))}
+                </li>)}
             </ul>
           </div>
 
           <div className="relative mx-auto w-full max-w-lg">
             <div className="absolute -inset-3 -rotate-2 rounded-[2rem] bg-gradient-to-br from-ocean-soft to-foam" />
-            <img
-              src={IMG.comunidade}
-              alt="Caminhos de madeira e casas da Ilha de Deus à beira do canal"
-              className="relative aspect-[4/3] w-full rounded-[2rem] border-4 border-white object-cover shadow-soft"
-              crossOrigin="anonymous"
-            />
+            <img src={IMG.comunidade} alt="Caminhos de madeira e casas da Ilha de Deus à beira do canal" className="relative aspect-[4/3] w-full rounded-[2rem] border-4 border-white object-cover shadow-soft" crossOrigin="anonymous" />
             <div className="absolute -bottom-8 -left-4 hidden w-44 overflow-hidden rounded-2xl border-4 border-white shadow-card sm:block">
-              <img
-                src={IMG.mangue}
-                alt="Manguezal da Ilha de Deus"
-                className="h-36 w-full object-cover"
-                crossOrigin="anonymous"
-              />
+              <img src={IMG.mangue} alt="Manguezal da Ilha de Deus" className="h-36 w-full object-cover" crossOrigin="anonymous" />
               <div className="bg-white px-3 py-2 text-xs font-medium text-primary">
                 O mangue que nos cerca
               </div>
@@ -256,14 +195,7 @@ export default function Home() {
             </p>
           </div>
           <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {numbers.map((n, i) => (
-              <div
-                key={n.label}
-                className={cn(
-                  "animate-rise rounded-2xl border border-border/70 bg-card p-6 shadow-card transition hover:-translate-y-1",
-                  `animate-rise-${i + 1}`,
-                )}
-              >
+            {numbers.map((n, i) => <div key={n.label} className={cn("animate-rise rounded-2xl border border-border/70 bg-card p-6 shadow-card transition hover:-translate-y-1", `animate-rise-${i + 1}`)}>
                 <span className={cn("grid h-11 w-11 place-items-center rounded-2xl", n.iconBg)}>
                   <n.icon className="h-5 w-5" />
                 </span>
@@ -272,8 +204,7 @@ export default function Home() {
                 </p>
                 <p className="mt-1 font-semibold text-foreground">{n.label}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{n.note}</p>
-              </div>
-            ))}
+              </div>)}
           </div>
           <div className="mt-10 text-center">
             <Button asChild variant="ocean">
@@ -296,11 +227,7 @@ export default function Home() {
             </h2>
           </div>
           <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {steps.map((s) => (
-              <div
-                key={s.step}
-                className="group relative rounded-2xl border border-border/70 bg-card p-6 shadow-card transition hover:-translate-y-1"
-              >
+            {steps.map(s => <div key={s.step} className="group relative rounded-2xl border border-border/70 bg-card p-6 shadow-card transition hover:-translate-y-1">
                 <span className="absolute right-5 top-4 font-display text-4xl font-bold text-primary/10">
                   {s.step}
                 </span>
@@ -313,8 +240,7 @@ export default function Home() {
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                   {s.text}
                 </p>
-              </div>
-            ))}
+              </div>)}
           </div>
           <div className="mt-10 flex flex-col items-center gap-3 text-center">
             <Button asChild variant="leaf" size="lg">
@@ -359,12 +285,7 @@ export default function Home() {
                 </Button>
               </div>
             </div>
-            <img
-              src={IMG.fauna}
-              alt="Guará, ave símbolo dos manguezais"
-              className="h-60 w-full rounded-2xl object-cover shadow-card sm:h-72"
-              crossOrigin="anonymous"
-            />
+            <img src={IMG.fauna} alt="Guará, ave símbolo dos manguezais" className="h-60 w-full rounded-2xl object-cover shadow-card sm:h-72" crossOrigin="anonymous" />
           </div>
         </div>
       </section>
@@ -387,22 +308,10 @@ export default function Home() {
             </Button>
           </div>
           <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {latestNews.map((n) => (
-              <Link
-                key={n.id}
-                to={`/noticias/${n.id}`}
-                className="group overflow-hidden rounded-2xl border border-border/70 bg-card shadow-card transition hover:-translate-y-1"
-              >
-                {n.coverUrl && (
-                  <div className="overflow-hidden">
-                    <img
-                      src={n.coverUrl}
-                      alt={n.title}
-                      className="h-48 w-full object-cover transition duration-500 group-hover:scale-105"
-                      crossOrigin="anonymous"
-                    />
-                  </div>
-                )}
+            {latestNews.map(n => <Link key={n.id} to={`/noticias/${n.id}`} className="group overflow-hidden rounded-2xl border border-border/70 bg-card shadow-card transition hover:-translate-y-1">
+                {n.coverUrl && <div className="overflow-hidden">
+                    <img src={n.coverUrl} alt={n.title} className="h-48 w-full object-cover transition duration-500 group-hover:scale-105" crossOrigin="anonymous" />
+                  </div>}
                 <div className="p-5">
                   <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <CalendarDays className="h-3.5 w-3.5" />
@@ -415,8 +324,7 @@ export default function Home() {
                     {n.summary}
                   </p>
                 </div>
-              </Link>
-            ))}
+              </Link>)}
           </div>
         </div>
       </section>
@@ -450,27 +358,19 @@ export default function Home() {
             Quem constrói esse caminho
           </h2>
           <div className="mx-auto mt-12 grid max-w-4xl gap-4 sm:grid-cols-3">
-            {[
-              {
-                icon: Users,
-                title: "Comunidade da Ilha de Deus",
-                text: "Olhar cotidiano e memória do território: quem alimenta o mapa com o que vive.",
-              },
-              {
-                icon: GraduationCap,
-                title: "Disciplina de extensão universitária",
-                text: "Pesquisa, tecnologia e compromisso social trabalhando com a comunidade.",
-              },
-              {
-                icon: Handshake,
-                title: "Voluntários e parceiros",
-                text: "Estudantes, coletivos e apoiadores que chegam para somar. Quer se somar?",
-              },
-            ].map((c) => (
-              <div
-                key={c.title}
-                className="rounded-2xl border border-border/70 bg-card p-6 text-left shadow-card"
-              >
+            {[{
+            icon: Users,
+            title: "Comunidade da Ilha de Deus",
+            text: "Olhar cotidiano e memória do território: quem alimenta o mapa com o que vive."
+          }, {
+            icon: GraduationCap,
+            title: "Disciplina de extensão universitária",
+            text: "Pesquisa, tecnologia e compromisso social trabalhando com a comunidade."
+          }, {
+            icon: Handshake,
+            title: "Voluntários e parceiros",
+            text: "Estudantes, coletivos e apoiadores que chegam para somar. Quer se somar?"
+          }].map(c => <div key={c.title} className="rounded-2xl border border-border/70 bg-card p-6 text-left shadow-card">
                 <span className="grid h-11 w-11 place-items-center rounded-2xl bg-ocean-soft text-primary">
                   <c.icon className="h-5 w-5" />
                 </span>
@@ -480,8 +380,7 @@ export default function Home() {
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                   {c.text}
                 </p>
-              </div>
-            ))}
+              </div>)}
           </div>
           <p className="mt-12 text-sm text-muted-foreground">
             Projeto em construção — um piloto que mostra como a fiscalização
@@ -489,6 +388,5 @@ export default function Home() {
           </p>
         </div>
       </section>
-    </div>
-  );
+    </div>;
 }
