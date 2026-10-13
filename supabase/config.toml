@@ -1,0 +1,4 @@
+project_id = "spb-t4n9462a25889cs5"
+
+[functions.register-admin]
+verify_jwt = false
