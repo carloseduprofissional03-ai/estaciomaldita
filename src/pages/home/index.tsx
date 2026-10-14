@@ -306,29 +306,7 @@ export default function Home() {
 
       {/* NOTÍCIAS */}
       <section className="bg-foam">
-        <div className="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:py-24">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <Eyebrow>Notícias do território</Eyebrow>
-              <h2 className="text-balance font-display text-3xl font-semibold text-primary sm:text-4xl">
-                O que está acontecendo
-              </h2>
-            </div>
-            <Button asChild variant="ghost" className="text-primary">
-              <Link to="/noticias">
-                Ver todas
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {latestNews.map(n => <Link key={n.id} to={`/noticias/${n.id}`} className="group overflow-hidden rounded-2xl border border-border/70 bg-card shadow-card transition hover:-translate-y-1">
-                {n.coverUrl && <div className="overflow-hidden">
-
-                  </div>}
-              </Link>)}
-          </div>
-        </div>
+        
       </section>
 
       {/* IMPORTANTE — PRIVACIDADE */}
