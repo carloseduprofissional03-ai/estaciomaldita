@@ -324,7 +324,7 @@ export default function Home() {
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {latestNews.map(n => <Link key={n.id} to={`/noticias/${n.id}`} className="group overflow-hidden rounded-2xl border border-border/70 bg-card shadow-card transition hover:-translate-y-1">
                 {n.coverUrl && <div className="overflow-hidden">
-                    <img src={n.coverUrl} alt={n.title} className="h-48 w-full object-cover transition duration-500 group-hover:scale-105" crossOrigin="anonymous" />
+
                   </div>}
               </Link>)}
           </div>
