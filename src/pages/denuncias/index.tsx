@@ -1,43 +1,72 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  ArrowRight,
-  BadgeCheck,
-  Clock,
-  HandHeart,
-  Landmark,
-  Lock,
+  BellRing,
+  Map as MapIcon,
   MapPin,
-  ScrollText,
+  Plus,
   Send,
+  ShieldCheck,
+  SlidersHorizontal,
 } from "lucide-react";
-import { CATEGORIES, getCategory } from "@/lib/categories";
-import { STAGES } from "@/lib/stages";
 import { useData } from "@/components/data-provider";
+import { CATEGORIES, getCategory } from "@/lib/categories";
+import { computeStats } from "@/lib/stats";
 import { fmtShort } from "@/lib/format";
 import { ReportStatusPill, StageNote } from "@/components/status";
+import { OcorrenciasMap } from "@/components/sections/ocorrencias-map";
+import { AlertasResumo } from "@/components/sections/alertas-resumo";
+import { AlertasBlock } from "@/components/sections/alertas-block";
+import { DenunciaForm } from "@/components/sections/denuncia-form";
+import { SectionTabs } from "@/components/section-tabs";
+import { useAba } from "@/hooks/use-aba";
+import { useAlertas } from "@/hooks/use-alertas";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+const ABAS = ["denuncias", "registrar", "alertas"] as const;
 
 export default function Denuncias() {
   const { db } = useData();
-  const recentes = useMemo(
+  const stats = useMemo(() => computeStats(db), [db]);
+  const { alertas } = useAlertas();
+  const [aba, irPara] = useAba([...ABAS], "denuncias");
+  const [categoria, setCategoria] = useState<string>("todas");
+
+  const reports = useMemo(
     () =>
       db.reports
         .filter((r) => r.status === "approved")
-        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-        .slice(0, 6),
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     [db.reports],
   );
 
-  const fluxo = [
-    { icon: MapPin, title: "A comunidade registra", text: "no mapa, com local, descrição e foto opcional." },
-    { icon: BadgeCheck, title: "A equipe verifica", text: "cada relato é conferido antes de virar público." },
-    { icon: ScrollText, title: "O ponto vira documento", text: "local, data e histórico ficam consultáveis por qualquer pessoa." },
-    { icon: Landmark, title: "Vira cobrança com protocolo", text: "o caso é encaminhado ao órgão responsável e o número do protocolo fica público." },
+  const lista = useMemo(
+    () =>
+      categoria === "todas"
+        ? reports
+        : reports.filter((r) => r.category === categoria),
+    [reports, categoria],
+  );
+
+  const contagemCategoria = useMemo(() => {
+    const mapa = new Map<string, number>();
+    for (const r of reports) {
+      mapa.set(r.category, (mapa.get(r.category) ?? 0) + 1);
+    }
+    return mapa;
+  }, [reports]);
+
+  const resumo = [
+    { label: "denúncias mapeadas", valor: stats.totalDenuncias },
+    { label: "encaminhadas a órgãos", valor: stats.encaminhadas },
+    { label: "casos sem retorno", valor: stats.semRetorno },
+    { label: "alertas ativos", valor: alertas.length },
   ];
 
   return (
     <div>
+      {/* TOPO */}
       <section className="border-b border-border/60 bg-gradient-to-b from-foam to-background">
         <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6">
           <p className="mb-2 inline-flex items-center gap-2 rounded-full bg-ocean-soft px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary">
@@ -45,182 +74,209 @@ export default function Denuncias() {
             Fiscalização comunitária
           </p>
           <h1 className="max-w-3xl text-balance font-display text-3xl font-semibold text-primary sm:text-4xl">
-            O que é denunciar? É cuidar do território em que se vive
+            Denúncias do território: registrar, acompanhar e cobrar
           </h1>
-          <p className="mt-4 max-w-2xl text-muted-foreground">
-            Denúncias socioambientais da Ilha de Deus registram problemas como
-            descarte irregular, esgoto e degradação do mangue. O que parecia
-            "fofoca de vizinho" ganha documento, mapa, protocolo e cobrança —
-            e a espera de cada caso passa a ser visível para todos.
+          <p className="mt-4 max-w-3xl text-muted-foreground">
+            Aqui está tudo em um lugar só: o mapa das ocorrências, os alertas
+            rápidos da comunidade, o formulário de denúncia e a lista do que já
+            foi registrado — cada ponto com sua trilha pública, do protocolo no
+            órgão responsável aos dias de silêncio.
           </p>
-        </div>
-      </section>
-
-      <section className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6">
-        <h2 className="text-center text-balance font-display text-2xl font-semibold text-primary sm:text-3xl">
-          Do registro à resposta — ou ao silêncio documentado
-        </h2>
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {fluxo.map((f, i) => (
-            <div key={f.title} className="relative rounded-2xl border border-border/70 bg-card p-5 shadow-card">
-              <span className="absolute right-4 top-4 font-display text-4xl font-semibold text-secondary-foreground/15">
-                {i + 1}
-              </span>
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-ocean-soft text-primary">
-                <f.icon className="h-5 w-5" />
-              </span>
-              <h3 className="mt-4 font-semibold text-foreground">{f.title}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{f.text}</p>
-            </div>
-          ))}
-        </div>
-
-        <p className="mx-auto mt-6 max-w-3xl text-center text-sm text-muted-foreground">
-          E quando a resposta não chega, a comunidade age: os mutirões do
-          projeto saem justamente dos pontos que continuam abertos no mapa.
-        </p>
-
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Button asChild variant="leaf" size="lg">
-            <Link to="/denunciar">
-              <Send className="h-4 w-4" />
-              Quero fazer uma denúncia
-            </Link>
-          </Button>
-          <Button asChild variant="ocean" size="lg">
-            <Link to="/mapa">
-              <MapPin className="h-4 w-4" />
-              Ver tudo no mapa
-            </Link>
-          </Button>
-        </div>
-      </section>
-
-      <section className="bg-foam">
-        <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6">
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-balance font-display text-2xl font-semibold text-primary sm:text-3xl">
-              As etapas do acompanhamento
-            </h2>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Cada ponto do mapa está em uma destas etapas — e todas são
-              verificáveis. Nada aqui é "achismo": a etapa só avança quando
-              existe registro (vistoria, protocolo, mutirão ou resposta
-              oficial).
-            </p>
-          </div>
-          <div className="mx-auto mt-10 grid max-w-5xl gap-3 sm:grid-cols-2">
-            {STAGES.map((s) => (
-              <div
-                key={s.id}
-                className="flex items-start gap-3 rounded-2xl border border-border/70 bg-card p-4 shadow-card/60"
+          <div className="mt-6 flex flex-wrap gap-2">
+            {resumo.map((r) => (
+              <span
+                key={r.label}
+                className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card px-3.5 py-1.5 text-xs font-medium text-muted-foreground shadow-sm"
               >
-                <span
-                  className="mt-1 h-3 w-3 shrink-0 rounded-full"
-                  style={{ backgroundColor: s.color }}
-                />
-                <div>
-                  <p className="font-semibold text-foreground">{s.label}</p>
-                  <p className="text-sm text-muted-foreground">{s.meaning}</p>
-                </div>
-              </div>
+                <b className="font-display text-sm font-bold text-primary">
+                  {r.valor}
+                </b>
+                {r.label}
+              </span>
             ))}
-          </div>
-
-          <div className="mx-auto mt-8 flex max-w-3xl items-start gap-3 rounded-2xl bg-sand p-5">
-            <Clock className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-            <p className="text-sm leading-relaxed text-foreground/85">
-              <b className="text-primary">Transparência também é sobre o que falta.</b>{" "}
-              O projeto registra, publica, protocola e cobra — mas não decide a
-              resposta dos órgãos públicos. Por isso o mapa mostra quantos dias
-              cada caso espera: o silêncio deixa de ser invisível.
-            </p>
           </div>
         </div>
       </section>
 
-      <section className="bg-foam">
-        <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6">
-          <h2 className="text-center font-display text-2xl font-semibold text-primary sm:text-3xl">
-            O que a comunidade monitora
-          </h2>
-          <div className="mx-auto mt-10 grid max-w-5xl gap-3 sm:grid-cols-2">
-            {CATEGORIES.map((c) => (
-              <div key={c.id} className="flex items-start gap-3 rounded-2xl border border-border/70 bg-card p-4 shadow-card/60">
-                <span
-                  className="mt-1 grid h-6 w-6 shrink-0 place-items-center rounded-full text-[10px] font-bold text-white"
-                  style={{ backgroundColor: c.color }}
-                >
-                  {c.id.charAt(0).toUpperCase()}
+      {/* PANORAMA: mapa + alertas em destaque */}
+      <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="overflow-hidden rounded-3xl border border-border/70 shadow-card">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 bg-card px-4 py-3">
+              <p className="flex items-center gap-2 font-display text-sm font-semibold text-primary">
+                <MapPin className="h-4 w-4 text-lagoon" />
+                Mapa de ocorrências
+              </p>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-[11px] text-muted-foreground">
+                  Clique num ponto para ver a trilha completa
                 </span>
-                <div>
-                  <p className="font-semibold text-foreground">{c.label}</p>
-                  <p className="text-sm text-muted-foreground">{c.description}</p>
+                <Link
+                  to="/mapa"
+                  className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-semibold text-primary transition hover:bg-ocean-soft"
+                >
+                  <MapIcon className="h-3.5 w-3.5" />
+                  Tela cheia
+                </Link>
+              </div>
+            </div>
+            <OcorrenciasMap altura="h-[380px] w-full sm:h-[440px] lg:h-[480px]" />
+          </div>
+
+          <AlertasResumo onVerTodos={() => irPara("alertas")} />
+        </div>
+      </section>
+
+      {/* SUBSECÇÕES */}
+      <section className="border-t border-border/60 bg-foam">
+        <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6">
+          <SectionTabs
+            abas={[
+              { id: "denuncias", label: "Denúncias da comunidade", icon: SlidersHorizontal, badge: reports.length },
+              { id: "registrar", label: "Registrar denúncia", icon: Plus },
+              { id: "alertas", label: "Alertas ativos", icon: BellRing, badge: alertas.length },
+            ]}
+            valor={aba}
+            onMudar={irPara}
+            className="mx-auto sm:mx-0"
+          />
+
+          <div className="mt-8">
+            {aba === "denuncias" && (
+              <div>
+                <div className="flex flex-wrap items-start justify-between gap-4 rounded-3xl border border-border/70 bg-card p-5 shadow-card">
+                  <div className="max-w-2xl">
+                    <h2 className="font-display text-lg font-semibold text-primary">
+                      Quer registrar uma nova denúncia?
+                    </h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      O registro leva dois minutos: categoria, descrição, foto
+                      opcional e o ponto no mapa. A equipe verifica antes de
+                      publicar.
+                    </p>
+                  </div>
+                  <Button variant="leaf" onClick={() => irPara("registrar")}>
+                    <Plus className="h-4 w-4" />
+                    Registrar denúncia
+                  </Button>
+                </div>
+
+                <div className="mt-8 flex flex-wrap items-center gap-1.5">
+                  <span className="mr-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Filtrar:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setCategoria("todas")}
+                    className={cn(
+                      "rounded-full border px-3 py-1 text-xs font-medium transition",
+                      categoria === "todas"
+                        ? "border-transparent bg-primary text-primary-foreground shadow-sm"
+                        : "border-border bg-card text-muted-foreground hover:bg-secondary",
+                    )}
+                  >
+                    Todas ({reports.length})
+                  </button>
+                  {CATEGORIES.filter((c) => contagemCategoria.get(c.id)).map((c) => {
+                    const on = categoria === c.id;
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => setCategoria(c.id)}
+                        className={cn(
+                          "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition",
+                          on
+                            ? "border-transparent text-white shadow-sm"
+                            : "border-border bg-card text-muted-foreground hover:bg-secondary",
+                        )}
+                        style={on ? { backgroundColor: c.color } : undefined}
+                      >
+                        <span
+                          className="h-2 w-2 rounded-full"
+                          style={{
+                            backgroundColor: on ? "rgba(255,255,255,.9)" : c.color,
+                          }}
+                        />
+                        {c.short} ({contagemCategoria.get(c.id)})
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {lista.map((r) => {
+                    const cat = getCategory(r.category);
+                    return (
+                      <article
+                        key={r.id}
+                        className="flex flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-card transition hover:-translate-y-0.5"
+                      >
+                        {r.photoUrl && (
+                          <img
+                            src={r.photoUrl}
+                            alt={r.title}
+                            className="h-40 w-full object-cover"
+                            crossOrigin="anonymous"
+                          />
+                        )}
+                        <div className="flex flex-1 flex-col p-5">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span
+                              className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white"
+                              style={{ backgroundColor: cat.color }}
+                            >
+                              {cat.label}
+                            </span>
+                            <ReportStatusPill status={r.status} stage={r.stage} />
+                          </div>
+                          <h3 className="mt-3 font-display text-base font-semibold leading-snug text-primary">
+                            {r.title}
+                          </h3>
+                          <p className="mt-1.5 text-xs text-muted-foreground">
+                            {r.reference} · {fmtShort(r.createdAt)}
+                          </p>
+                          <StageNote report={r} />
+                          <Link
+                            to="/mapa"
+                            className="mt-auto inline-flex items-center gap-1.5 pt-3 text-xs font-semibold text-primary underline-offset-2 hover:underline"
+                          >
+                            <MapPin className="h-3.5 w-3.5" />
+                            Ver este ponto no mapa
+                          </Link>
+                        </div>
+                      </article>
+                    );
+                  })}
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+            )}
 
-      <section className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <h2 className="font-display text-2xl font-semibold text-primary sm:text-3xl">
-            Denúncias mais recentes
-          </h2>
-          <Button asChild variant="ghost" className="text-primary">
-            <Link to="/mapa">
-              Ver todas no mapa
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-        <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {recentes.map((r) => {
-            const cat = getCategory(r.category);
-            return (
-              <article key={r.id} className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-card transition hover:-translate-y-0.5">
-                {r.photoUrl && (
-                  <img
-                    src={r.photoUrl}
-                    alt={r.title}
-                    className="h-40 w-full object-cover"
-                    crossOrigin="anonymous"
-                  />
-                )}
-                <div className="p-5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white" style={{ backgroundColor: cat.color }}>
-                      {cat.label}
-                    </span>
-                    <ReportStatusPill status={r.status} stage={r.stage} />
+            {aba === "registrar" && (
+              <div className="rounded-3xl border border-border/70 bg-card p-5 shadow-card sm:p-7">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="font-display text-xl font-semibold text-primary">
+                      Registrar uma denúncia
+                    </h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Contato é opcional e <b>nunca publicado</b> — quem denuncia
+                      está protegido.
+                    </p>
                   </div>
-                  <h3 className="mt-3 font-display text-base font-semibold leading-snug text-primary">
-                    {r.title}
-                  </h3>
-                  <p className="mt-1.5 text-xs text-muted-foreground">
-                    {r.reference} · {fmtShort(r.createdAt)}
-                  </p>
-                  <StageNote report={r} />
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-sand px-3 py-1.5 text-[11px] font-semibold text-foreground/80">
+                    <ShieldCheck className="h-3.5 w-3.5 text-leaf" />
+                    Verificação antes de publicar
+                  </span>
                 </div>
-              </article>
-            );
-          })}
-        </div>
-      </section>
+                <div className="mt-6">
+                  <DenunciaForm />
+                </div>
+              </div>
+            )}
 
-      <section className="bg-sand">
-        <div className="mx-auto flex w-full max-w-5xl flex-col items-start gap-5 px-4 py-12 sm:px-6 lg:flex-row lg:items-center">
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-leaf text-white">
-            <Lock className="h-5 w-5" />
-          </span>
-          <p className="max-w-4xl text-sm leading-relaxed text-foreground/85">
-            <b className="text-primary">Proteção ao denunciante:</b> nomes e
-            contatos de quem registra ocorrências nunca são publicados. A
-            verificação é feita pela equipe antes de qualquer ponto virar
-            público — o que garante a veracidade das informações e protege quem
-            tem coragem de cuidar do próprio território.
-          </p>
+            {aba === "alertas" && <AlertasBlock />}
+          </div>
         </div>
       </section>
     </div>
