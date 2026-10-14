@@ -326,18 +326,6 @@ export default function Home() {
                 {n.coverUrl && <div className="overflow-hidden">
                     <img src={n.coverUrl} alt={n.title} className="h-48 w-full object-cover transition duration-500 group-hover:scale-105" crossOrigin="anonymous" />
                   </div>}
-                <div className="p-5">
-                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <CalendarDays className="h-3.5 w-3.5" />
-                    {fmtShort(n.createdAt)}
-                  </p>
-                  <h3 className="mt-2 line-clamp-2 font-display text-lg font-semibold leading-snug text-primary group-hover:underline">
-                    {n.title}
-                  </h3>
-                  <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-                    {n.summary}
-                  </p>
-                </div>
               </Link>)}
           </div>
         </div>
