@@ -87,7 +87,7 @@ export default function Home() {
         <div className="mx-auto w-full max-w-7xl px-4 pt-16 text-center sm:px-6 lg:pt-24">
           <span className="animate-rise inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-xs font-semibold text-primary shadow-sm">
             <Droplets className="h-3.5 w-3.5 text-lagoon" />
-            Piloto: Ilha de Deus, Recife (PE)
+            Ilha de Deus, Recife (PE)
           </span>
           <h1 className="animate-rise animate-rise-1 mx-auto mt-6 max-w-4xl text-balance font-display text-4xl font-extrabold leading-[1.1] tracking-tight text-primary sm:text-5xl lg:text-6xl">
             Parece pequeno hoje.{" "}
