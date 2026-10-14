@@ -90,8 +90,8 @@ export default function Home() {
             Ilha de Deus, Recife (PE)
           </span>
           <h1 className="animate-rise animate-rise-1 mx-auto mt-6 max-w-4xl text-balance font-display text-4xl font-extrabold leading-[1.1] tracking-tight text-primary sm:text-5xl lg:text-6xl">
-            Parece pequeno hoje.{" "}
-            <span className="text-lagoon">É a nascente de algo maior.</span>
+            Raízes da Costa: MANGUETOWN VIVA.{" "}
+            <span className="text-lagoon">Mangue & Comunidade.</span>
           </h1>
           <p className="animate-rise animate-rise-2 mx-auto mt-5 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">{"Um projeto de fiscaliza\xE7\xE3o ambiental comunit\xE1ria que une uma comunidade de mangue \xE0 preserva\xE7\xE3o dos sistemas costeiros do Recife"}</p>
           <div className="animate-rise animate-rise-3 mt-8 flex flex-wrap items-center justify-center gap-3">
