@@ -93,7 +93,7 @@ export default function Home() {
             MANGUETOWN VIVA{" "}
             <span className="text-lagoon">Mangue & Comunidade.</span>
           </h1>
-          <p className="animate-rise animate-rise-2 mx-auto mt-5 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">{"Um projeto comunit\xE1rio que une os moradores da Ilha de Deus na integra\xE7\xE3o dos seus saberes culturais, resgate territorial e da fiscaliza\xE7\xE3o ambiental."}</p>
+          <p className="animate-rise animate-rise-2 mx-auto mt-5 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">{"Um projeto comunit\xE1rio que une os moradores da Ilha de Deus na integra\xE7\xE3o dos seus saberes culturais, resgate territorial e da fiscaliza\xE7\xE3o ambiental em uma plataforma integrada e colaborativa."}</p>
           <div className="animate-rise animate-rise-3 mt-8 flex flex-wrap items-center justify-center gap-3">
             <Button asChild variant="leaf" size="lg">
               <Link to="/mapa">
