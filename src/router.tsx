@@ -3,6 +3,7 @@ import Home from "./pages/home";
 import NotFound from "./pages/NotFound";
 import Mapa from "./pages/mapa";
 import Alertas from "./pages/alertas";
+import Ilha from "./pages/ilha";
 import Denunciar from "./pages/denunciar";
 import Denuncias from "./pages/denuncias";
 import Voluntariado from "./pages/voluntariado";
@@ -19,6 +20,7 @@ export const routers = [
       { path: "/", name: "home", element: <Home /> },
       { path: "/mapa", name: "mapa", element: <Mapa /> },
       { path: "/alertas", name: "alertas", element: <Alertas /> },
+      { path: "/ilha", name: "ilha", element: <Ilha /> },
       { path: "/denunciar", name: "denunciar", element: <Denunciar /> },
       { path: "/denuncias", name: "denuncias", element: <Denuncias /> },
       { path: "/voluntariado", name: "voluntariado", element: <Voluntariado /> },

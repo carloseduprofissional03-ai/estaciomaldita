@@ -1,14 +1,18 @@
+import {
+  comoDataISO,
+  comoNumero,
+  comoTexto,
+  comoTextoLongo,
+  enviarItem,
+  lerItens,
+  planilhaAtiva,
+  type RespostaItens,
+} from "./planilha";
+
 /*
  * Mapa de alerta — avisos rápidos da comunidade, sem verificação prévia.
- *
- * Como funciona (custo zero):
- *  1. A equipe cria uma planilha no Google Sheets e cola lá o script que está
- *     em src/lib/alerts-script.ts;
- *  2. publica o script como App da Web (acesso: qualquer pessoa);
- *  3. cola a URL que termina em /exec em ALERTAS.endpoint aqui embaixo.
- *
- * O site envia o alerta por POST (modo "no-cors", sem depender de CORS) e lê a
- * lista por GET. Cada alerta sai do mapa sozinho depois de ALERTAS.validadeDias.
+ * Os dados vivem na mesma planilha do Google da área "A Ilha" (aba "Alertas")
+ * e a equipe modera pela coluna "status" da planilha.
  */
 
 export interface Alerta {
@@ -34,17 +38,12 @@ export interface NovoAlerta {
 }
 
 export const ALERTAS = {
-  /** URL do App da Web da planilha (termina em /exec). Vazio = demonstração. */
-  endpoint: "",
   /** Dias que um alerta fica no mapa antes de ser apagado. */
   validadeDias: 60,
 };
 
-export const ALERTAS_CONECTADOS = ALERTAS.endpoint.startsWith(
-  "https://script.google.com/",
-);
-
-const CACHE_KEY = "nascfz-alertas-cache-v1";
+/** A planilha (uma só) alimenta o mapa de alerta e a área "A Ilha". */
+export const ALERTAS_CONECTADOS = planilhaAtiva();
 
 function diasAtras(dias: number): string {
   return new Date(Date.now() - dias * 86_400_000).toISOString();
@@ -109,93 +108,35 @@ export function alertasVisiveis(lista: Alerta[]): Alerta[] {
     .sort((a, b) => b.criadoEm.localeCompare(a.criadoEm));
 }
 
-export function lerCache(): Alerta[] {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as Alerta[];
-    return Array.isArray(parsed) ? alertasVisiveis(parsed) : [];
-  } catch {
-    return [];
-  }
-}
-
-function gravarCache(lista: Alerta[]): void {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(lista.slice(0, 200)));
-  } catch {
-    // armazenamento cheio — ignora
-  }
-}
-
-function normalizar(raw: unknown): Alerta | null {
+/** Alertas fora do prazo saem do mapa sozinhos (igual à limpeza da planilha). */
+export function normalizarAlerta(raw: unknown): Alerta | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
-  const lat = Number(r.lat);
-  const lng = Number(r.lng);
-  const titulo = String(r.titulo ?? "").trim();
-  if (!titulo || !isFinite(lat) || !isFinite(lng)) return null;
-  return {
-    id: String(r.id ?? `${titulo}-${lat}-${lng}`),
+  const lat = comoNumero(r.lat);
+  const lng = comoNumero(r.lng);
+  const titulo = comoTexto(r.titulo, 140);
+  if (!titulo || lat === null || lng === null) return null;
+  const alerta: Alerta = {
+    id: comoTexto(r.id, 60) || `${titulo}-${lat}-${lng}`,
     titulo,
-    descricao: String(r.descricao ?? "").trim(),
-    categoria: String(r.categoria ?? "outro"),
+    descricao: comoTextoLongo(r.descricao, 800),
+    categoria: comoTexto(r.categoria, 40) || "outro",
     lat,
     lng,
-    referencia: String(r.referencia ?? "").trim(),
-    contato: r.contato ? String(r.contato) : undefined,
-    criadoEm: String(r.criadoEm ?? new Date().toISOString()),
+    referencia: comoTexto(r.referencia, 180),
+    contato: comoTexto(r.contato, 140) || undefined,
+    criadoEm: comoDataISO(r.criadoEm ?? r.criado_em),
   };
+  return alertaExpirado(alerta) ? null : alerta;
 }
 
-export interface RespostaAlertas {
-  ok: boolean;
-  alertas: Alerta[];
-  erro?: string;
-}
+export type RespostaAlertas = RespostaItens<Alerta>;
 
-/** Lê a lista de alertas aprovados na planilha. */
-export async function buscarAlertas(
-  endpoint: string = ALERTAS.endpoint,
-  timeoutMs = 12_000,
-): Promise<RespostaAlertas> {
-  if (!endpoint) return { ok: false, alertas: [], erro: "sem-endpoint" };
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const url = `${endpoint}${endpoint.includes("?") ? "&" : "?"}t=${Date.now()}`;
-    const res = await fetch(url, { signal: controller.signal });
-    if (!res.ok) return { ok: false, alertas: [], erro: `HTTP ${res.status}` };
-    const data = (await res.json()) as unknown;
-    const bruto = Array.isArray(data)
-      ? data
-      : (data as { alertas?: unknown })?.alertas;
-    const alertas = (Array.isArray(bruto) ? bruto : [])
-      .map(normalizar)
-      .filter((a): a is Alerta => a !== null);
-    gravarCache(alertas);
-    return { ok: true, alertas: alertasVisiveis(alertas) };
-  } catch (e) {
-    return {
-      ok: false,
-      alertas: [],
-      erro: e instanceof Error ? e.message : "falha de rede",
-    };
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-/**
- * Envia um alerta novo para a planilha.
- * Usa "no-cors" com corpo de formulário: a requisição chega ao Apps Script sem
- * exigir configuração de CORS no Google.
- */
+/** Envia um alerta novo para a planilha. */
 export async function enviarAlerta(
   novo: NovoAlerta,
 ): Promise<{ ok: boolean; erro?: string }> {
-  if (!ALERTAS_CONECTADOS) return { ok: false, erro: "sem-endpoint" };
-  const corpo = new URLSearchParams({
+  return enviarItem("alertas", {
     titulo: novo.titulo,
     descricao: novo.descricao,
     categoria: novo.categoria,
@@ -204,15 +145,9 @@ export async function enviarAlerta(
     referencia: novo.referencia,
     contato: novo.contato ?? "",
   });
-  try {
-    await fetch(ALERTAS.endpoint, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-      body: corpo.toString(),
-    });
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, erro: e instanceof Error ? e.message : "falha de rede" };
-  }
+}
+
+/** Lê a lista de alertas aprovados na planilha. */
+export async function buscarAlertas(): Promise<RespostaAlertas> {
+  return lerItens<Alerta>("alertas", normalizarAlerta);
 }

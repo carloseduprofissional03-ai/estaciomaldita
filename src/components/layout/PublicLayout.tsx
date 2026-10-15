@@ -11,6 +11,9 @@ const NAV = [{
   to: "/denuncias",
   label: "Denúncias"
 }, {
+  to: "/ilha",
+  label: "A Ilha"
+}, {
   to: "/voluntariado",
   label: "Voluntariado"
 }, {
@@ -25,6 +28,9 @@ const COLUNAS = [{
   }, {
     to: "/denuncias",
     label: "Denúncias e alertas"
+  }, {
+    to: "/ilha",
+    label: "A Ilha: avisos e instituições"
   }, {
     to: "/voluntariado",
     label: "Voluntariado"
@@ -41,6 +47,9 @@ const COLUNAS = [{
     to: "/denuncias?aba=alertas",
     label: "Enviar um alerta"
   }, {
+    to: "/ilha?aba=avisos",
+    label: "Publicar um aviso"
+  }, {
     to: "/noticias?aba=galeria",
     label: "Enviar uma foto"
   }, {
@@ -53,8 +62,8 @@ const COLUNAS = [{
     to: "/mapa",
     label: "Mapa em tela cheia"
   }, {
-    to: "/denuncias?aba=alertas",
-    label: "Alertas ativos"
+    to: "/ilha?aba=instituicoes",
+    label: "Instituições e ONGs"
   }, {
     to: "/impacto",
     label: "Impacto e relatórios"
