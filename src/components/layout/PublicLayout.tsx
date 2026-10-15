@@ -9,7 +9,7 @@ const NAV = [
   { to: "/", label: "Início" },
   { to: "/denuncias", label: "Denúncias" },
   { to: "/voluntariado", label: "Voluntariado" },
-  { to: "/noticias", label: "Notícias" },
+  { to: "/noticias", label: "Notícias e dados" },
 ];
 
 const COLUNAS = [
