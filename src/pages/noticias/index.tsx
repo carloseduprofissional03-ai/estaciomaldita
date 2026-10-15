@@ -60,32 +60,6 @@ export default function Noticias() {
         </div>
       </section>
 
-      {/* MÓDULO DE INDICADORES */}
-      <section className="border-b border-border/60 bg-background">
-        <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 className="font-display text-2xl font-semibold text-primary sm:text-3xl">
-                Indicadores e resultados
-              </h2>
-              <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-                Transparência com o que já foi resolvido — e com o tempo que a
-                comunidade ainda espera. Os relatórios são públicos.
-              </p>
-            </div>
-            <Link
-              to="/impacto"
-              className="text-sm font-semibold text-primary underline-offset-2 hover:underline"
-            >
-              Abrir relatório completo
-            </Link>
-          </div>
-          <div className="mt-6">
-            <ImpactoModulo compacto onVerCompleto={() => navigate("/impacto")} />
-          </div>
-        </div>
-      </section>
-
       {/* SUBSECÇÕES */}
       <section className="bg-foam">
         <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6">
@@ -174,6 +148,32 @@ export default function Noticias() {
             )}
 
             {aba === "galeria" && <GaleriaBlock />}
+          </div>
+        </div>
+      </section>
+
+      {/* MÓDULO DE INDICADORES */}
+      <section className="border-t border-border/60 bg-background">
+        <div className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="font-display text-2xl font-semibold text-primary sm:text-3xl">
+                Indicadores e resultados
+              </h2>
+              <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
+                Transparência com o que já foi resolvido — e com o tempo que a
+                comunidade ainda espera. Os relatórios são públicos.
+              </p>
+            </div>
+            <Link
+              to="/impacto"
+              className="text-sm font-semibold text-primary underline-offset-2 hover:underline"
+            >
+              Abrir relatório completo
+            </Link>
+          </div>
+          <div className="mt-6">
+            <ImpactoModulo compacto onVerCompleto={() => navigate("/impacto")} />
           </div>
         </div>
       </section>
