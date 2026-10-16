@@ -212,7 +212,7 @@ export function ImpactoModulo({
             <ArrowRight className="h-4 w-4" />
           </Button>
           <Button asChild variant="outline">
-            <Link to="/denuncias">Explorar os pontos no mapa</Link>
+            <Link to="/denuncias?aba=mapa">Explorar os pontos no mapa</Link>
           </Button>
         </div>
       ) : (
@@ -418,7 +418,7 @@ export function ImpactoModulo({
               aparecem aqui com as mesmas etapas, protocolos e dias de espera.
             </p>
             <Button asChild variant="ocean" className="mt-4">
-              <Link to="/denuncias">Explorar os pontos no mapa</Link>
+              <Link to="/denuncias?aba=mapa">Explorar os pontos no mapa</Link>
             </Button>
           </div>
         </>
