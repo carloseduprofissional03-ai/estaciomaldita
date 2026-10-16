@@ -196,39 +196,7 @@ export default function Home() {
 
       {/* DADOS DA COMUNIDADE */}
       <section className="bg-foam">
-        <div className="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:py-24">
-          <div className="mx-auto max-w-2xl text-center">
-            <Eyebrow>Dados da comunidade</Eyebrow>
-            <h2 className="text-balance font-display text-3xl font-semibold text-primary sm:text-4xl">
-              O território em números
-            </h2>
-            <p className="mt-4 text-muted-foreground">
-              Números vivos do mapa comunitário: o que a comunidade registrou, o
-              que foi protocolado nos órgãos públicos e o que já virou
-              resultado.
-            </p>
-          </div>
-          <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {numbers.map((n, i) => <div key={n.label} className={cn("animate-rise rounded-2xl border border-border/70 bg-card p-6 shadow-card transition hover:-translate-y-1", `animate-rise-${i + 1}`)}>
-                <span className={cn("grid h-11 w-11 place-items-center rounded-2xl", n.iconBg)}>
-                  <n.icon className="h-5 w-5" />
-                </span>
-                <p className="mt-5 font-display text-5xl font-semibold text-primary">
-                  {n.value}
-                </p>
-                <p className="mt-1 font-semibold text-foreground">{n.label}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{n.note}</p>
-              </div>)}
-          </div>
-          <div className="mt-10 text-center">
-            <Button asChild variant="ocean">
-              <Link to="/impacto">
-                Ver relatório completo
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-        </div>
+        
       </section>
 
       {/* COMO FUNCIONA */}
