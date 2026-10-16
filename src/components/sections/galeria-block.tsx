@@ -2,13 +2,19 @@ import { useMemo, useState, type FormEvent } from "react";
 import { Camera, CheckCircle2, Images, Send } from "lucide-react";
 import { useData } from "@/components/data-provider";
 import { ImageUpload } from "@/components/image-upload";
+import { Carrossel } from "@/components/carrossel";
 import { fmtShort } from "@/lib/format";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 /*
- * Galeria da comunidade: envio de fotos + mural. Usada na página /galeria e
- * como aba dentro de /noticias.
+ * Galeria da comunidade: envio de fotos + mural em carrossel, com visualizador
+ * ampliado (lightbox) ao clicar numa foto.
  */
 export function GaleriaBlock() {
   const { db, actions } = useData();
@@ -27,6 +33,9 @@ export function GaleriaBlock() {
   const [image, setImage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [fotoAberta, setFotoAberta] = useState<string | null>(null);
+
+  const foto = fotos.find((f) => f.id === fotoAberta) ?? null;
 
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -76,9 +85,9 @@ export function GaleriaBlock() {
             onSubmit={submit}
             className="mt-6 rounded-3xl border border-border/70 bg-card p-6 shadow-card sm:p-8"
           >
-            <h2 className="font-display text-xl font-semibold text-primary">
+            <h3 className="font-display text-xl font-semibold text-primary">
               Envie uma foto do território
-            </h2>
+            </h3>
             <p className="mt-1 text-sm text-muted-foreground">
               Mutirões, mangue, aves, rio, comunidade… o que merece registro?
             </p>
@@ -113,38 +122,79 @@ export function GaleriaBlock() {
           </form>
         ))}
 
-      {fotos.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-dashed border-border bg-card px-6 py-16 text-center text-muted-foreground">
-          Ainda não há fotos aprovadas.
-        </div>
-      ) : (
-        <div className="mt-6 columns-1 gap-4 sm:columns-2 lg:columns-3 [&>*]:mb-4">
+      <div className="mt-8">
+        <Carrossel
+          rotulo="Galeria de fotos da comunidade"
+          vazio={
+            <p className="rounded-2xl border border-dashed border-border bg-card px-6 py-12 text-center text-muted-foreground">
+              Ainda não há fotos aprovadas.
+            </p>
+          }
+        >
           {fotos.map((p) => (
-            <figure
+            <button
               key={p.id}
-              className="group relative break-inside-avoid overflow-hidden rounded-2xl border border-border/60 bg-card shadow-card"
+              type="button"
+              onClick={() => setFotoAberta(p.id)}
+              className="group block h-full w-full overflow-hidden rounded-2xl border border-border/60 bg-card text-left shadow-card transition hover:-translate-y-1"
             >
-              <img
-                src={p.imageUrl}
-                alt={p.title}
-                className={cn(
-                  "w-full object-cover transition duration-500 group-hover:scale-[1.03]",
-                  p.description && p.description.length > 80 ? "h-96" : "h-64",
-                )}
-                crossOrigin="anonymous"
-              />
-              <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary/90 to-transparent p-4 pt-12 text-white">
-                <p className="font-display text-base font-semibold">{p.title}</p>
-                <p className="mt-0.5 text-xs text-white/80">
-                  {p.description}
-                  {p.description ? " · " : ""}
+              <div className="overflow-hidden">
+                <img
+                  src={p.imageUrl}
+                  alt={p.title}
+                  className="h-56 w-full object-cover transition duration-500 group-hover:scale-105"
+                  crossOrigin="anonymous"
+                />
+              </div>
+              <div className="p-4">
+                <p className="truncate font-display text-base font-semibold text-primary">
+                  {p.title}
+                </p>
+                <p className="mt-1 truncate text-xs text-muted-foreground">
                   {p.author} · {fmtShort(p.createdAt)}
                 </p>
-              </figcaption>
-            </figure>
+                <span className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-primary underline-offset-2 group-hover:underline">
+                  <Images className="h-3.5 w-3.5" />
+                  Ampliar foto
+                </span>
+              </div>
+            </button>
           ))}
-        </div>
-      )}
+        </Carrossel>
+      </div>
+
+      <Dialog
+        open={!!foto}
+        onOpenChange={(v) => {
+          if (!v) setFotoAberta(null);
+        }}
+      >
+        <DialogContent className="max-w-3xl overflow-hidden bg-card p-0">
+          {foto && (
+            <div>
+              <img
+                src={foto.imageUrl}
+                alt={foto.title}
+                className="max-h-[65vh] w-full bg-foreground/95 object-contain"
+                crossOrigin="anonymous"
+              />
+              <div className="p-5">
+                <DialogTitle className="font-display text-lg font-semibold text-primary">
+                  {foto.title}
+                </DialogTitle>
+                {foto.description && (
+                  <DialogDescription className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                    {foto.description}
+                  </DialogDescription>
+                )}
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Enviada por {foto.author} · {fmtShort(foto.createdAt)}
+                </p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

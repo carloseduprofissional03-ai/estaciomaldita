@@ -15,8 +15,10 @@ import {
 } from "@/lib/geo";
 import { isOpenStage, isResolvedStage } from "@/lib/stages";
 import { useData } from "@/components/data-provider";
+import { ALERTAS, type Alerta } from "@/lib/alerts";
+import { useAlertas } from "@/hooks/use-alertas";
 import type { Report } from "@/lib/types";
-import { fmtShort } from "@/lib/format";
+import { daysSince, fmtShort } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { ReportStatusPill, ReportTrail, StageNote } from "@/components/status";
 import { Button } from "@/components/ui/button";
@@ -67,6 +69,21 @@ function makeIcon(categoryColor: string, selected: boolean, kind: MarkerKind) {
   });
 }
 
+/** Marcador dos alertas da comunidade (anel claro em volta). */
+function alertaIcon(categoryColor: string, selected: boolean) {
+  const s = selected ? 30 : 22;
+  return L.divIcon({
+    className: "",
+    html: `<span style="display:grid;width:${s}px;height:${s}px;border-radius:9999px;background:${categoryColor};border:2px solid rgba(255,255,255,.95);box-shadow:0 0 0 2px rgba(255,255,255,.25),0 0 ${selected ? 24 : 12}px ${categoryColor}b3;place-items:center;">${
+      selected
+        ? `<span class="marker-ping" style="background:${categoryColor}"></span>`
+        : ""
+    }<span style="width:${selected ? 8 : 6}px;height:${selected ? 8 : 6}px;border-radius:9999px;background:rgba(255,255,255,.95)"></span></span>`,
+    iconSize: [s, s],
+    iconAnchor: [s / 2, s / 2],
+  });
+}
+
 function FlyTo({ position }: { position: [number, number] | null }) {
   const map = useMap();
   const last = useRef("");
@@ -102,12 +119,18 @@ const SITUACOES: { id: Situacao; label: string }[] = [
 export function OcorrenciasMap({
   altura = "h-[70vh] w-full lg:h-[calc(100vh-248px)] lg:min-h-[560px]",
   className,
+  comAlertas = false,
 }: {
   /** Classes de altura do mapa (Tailwind). */
   altura?: string;
   className?: string;
+  /** Mostra a camada de alertas da comunidade junto das ocorrências. */
+  comAlertas?: boolean;
 }) {
   const { db } = useData();
+  const { alertas } = useAlertas();
+  const [camada, setCamada] = useState<"ocorrencias" | "alertas">("ocorrencias");
+  const [alertaId, setAlertaId] = useState<string | null>(null);
   const [base, setBase] = useState<BaseMode>("sat");
   const [cats, setCats] = useState<Set<string>>(
     () => new Set(CATEGORIES.map((c) => c.id)),
@@ -135,6 +158,14 @@ export function OcorrenciasMap({
     [reports, cats, situacao],
   );
 
+  const alertasVisiveisCamada = useMemo(
+    () => (comAlertas ? alertas.filter((a) => cats.has(a.categoria)) : []),
+    [alertas, cats, comAlertas],
+  );
+
+  const alertaSelecionado =
+    alertasVisiveisCamada.find((a) => a.id === alertaId) ?? null;
+
   const selected = visible.find((r) => r.id === selectedId) ?? null;
   const resolvedCount = reports.filter((r) => isResolvedStage(r.stage)).length;
   const silentCount = reports.filter((r) => r.stage === "sem_retorno").length;
@@ -143,6 +174,13 @@ export function OcorrenciasMap({
   const catCounts = useMemo(() => {
     const map = new Map<string, { total: number; ativas: number }>();
     for (const c of CATEGORIES) map.set(c.id, { total: 0, ativas: 0 });
+    if (camada === "alertas") {
+      for (const a of alertas) {
+        const cur = map.get(a.categoria);
+        if (cur) cur.total += 1;
+      }
+      return map;
+    }
     for (const r of reports) {
       const cur = map.get(r.category);
       if (cur) {
@@ -151,7 +189,7 @@ export function OcorrenciasMap({
       }
     }
     return map;
-  }, [reports]);
+  }, [reports, alertas, camada]);
 
   function toggleCat(id: string) {
     setCats((prev) => {
@@ -179,58 +217,113 @@ export function OcorrenciasMap({
       >
         <TileLayer attribution={tiles.attribution} url={tiles.url} />
         <FlyTo position={focus} />
-        <MapClickReset onClear={() => setSelectedId(null)} />
-        {visible.map((r) => {
-          const cat = getCategory(r.category);
-          const kind: MarkerKind =
-            r.stage === "sem_retorno"
-              ? "silent"
-              : isResolvedStage(r.stage)
-                ? "resolved"
-                : "open";
-          return (
+        <MapClickReset
+          onClear={() => {
+            setSelectedId(null);
+            setAlertaId(null);
+          }}
+        />
+        {camada === "ocorrencias" &&
+          visible.map((r) => {
+            const cat = getCategory(r.category);
+            const kind: MarkerKind =
+              r.stage === "sem_retorno"
+                ? "silent"
+                : isResolvedStage(r.stage)
+                  ? "resolved"
+                  : "open";
+            return (
+              <Marker
+                key={r.id}
+                position={[r.lat, r.lng]}
+                icon={makeIcon(cat.color, r.id === selectedId, kind)}
+                eventHandlers={{ click: () => selectReport(r.id) }}
+              />
+            );
+          })}
+        {camada === "alertas" &&
+          alertasVisiveisCamada.map((a) => (
             <Marker
-              key={r.id}
-              position={[r.lat, r.lng]}
-              icon={makeIcon(cat.color, r.id === selectedId, kind)}
-              eventHandlers={{ click: () => selectReport(r.id) }}
+              key={a.id}
+              position={[a.lat, a.lng]}
+              icon={alertaIcon(
+                getCategory(a.categoria).color,
+                a.id === alertaId,
+              )}
+              eventHandlers={{
+                click: () => setAlertaId((cur) => (cur === a.id ? null : a.id)),
+              }}
             />
-          );
-        })}
+          ))}
       </MapContainer>
 
       {/* Painel flutuante: filtros + legenda + alternância Satélite/Ruas */}
       <div className="pointer-events-none absolute inset-x-0 top-3 z-[1200] flex justify-center px-3 sm:inset-x-auto sm:left-5 sm:right-auto sm:justify-start">
         <div className="pointer-events-auto w-full max-w-xl overflow-hidden rounded-2xl border border-white/60 bg-white/90 shadow-soft backdrop-blur-md">
-          <div className="flex items-center gap-2 border-b border-border/60 px-3.5 py-2.5">
-            <span className="inline-flex items-center gap-1.5 font-display text-sm font-semibold text-primary max-sm:hidden">
-              <Filter className="h-4 w-4 text-lagoon" />
-              Filtros
-            </span>
+          <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-3.5 py-2.5">
+            {!comAlertas && (
+              <span className="inline-flex items-center gap-1.5 font-display text-sm font-semibold text-primary max-sm:hidden">
+                <Filter className="h-4 w-4 text-lagoon" />
+                Filtros
+              </span>
+            )}
 
-            <div className="flex gap-1 rounded-full bg-secondary p-0.5">
-              {SITUACOES.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => {
-                    setSituacao(s.id);
-                    setSelectedId(null);
-                  }}
-                  className={cn(
-                    "shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold transition",
-                    situacao === s.id
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-primary",
-                  )}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
+            {comAlertas && (
+              <div className="flex gap-1 rounded-full bg-secondary p-0.5">
+                {(
+                  [
+                    { id: "ocorrencias", label: "Ocorrências" },
+                    { id: "alertas", label: "Alertas" },
+                  ] as { id: "ocorrencias" | "alertas"; label: string }[]
+                ).map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => {
+                      setCamada(c.id);
+                      setSelectedId(null);
+                      setAlertaId(null);
+                    }}
+                    className={cn(
+                      "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold transition",
+                      camada === c.id
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-primary",
+                    )}
+                  >
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {camada === "ocorrencias" && (
+              <div className="flex gap-1 rounded-full bg-secondary p-0.5">
+                {SITUACOES.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => {
+                      setSituacao(s.id);
+                      setSelectedId(null);
+                    }}
+                    className={cn(
+                      "shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold transition",
+                      situacao === s.id
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-primary",
+                    )}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
             <span className="ml-auto hidden whitespace-nowrap text-[11px] font-medium text-muted-foreground sm:inline">
-              {visible.length} no mapa
+              {camada === "alertas"
+                ? `${alertasVisiveisCamada.length} alertas`
+                : `${visible.length} no mapa`}
             </span>
           </div>
 
@@ -287,22 +380,33 @@ export function OcorrenciasMap({
           </div>
 
           <div className="flex items-center gap-3 border-t border-border/60 px-3 py-1.5 text-[10px] font-medium text-muted-foreground sm:hidden">
-            <span className="inline-flex items-center gap-1">
-              <span className="grid h-3.5 w-3.5 place-items-center rounded-full bg-destructive text-[9px] font-bold text-white">
-                !
-              </span>
-              sem retorno
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <span className="grid h-3.5 w-3.5 place-items-center rounded-full bg-slate-400 text-[9px] font-bold text-white">
-                ✓
-              </span>
-              resolvido
-            </span>
-            <span className="ml-auto">{visible.length} no mapa</span>
+            {camada === "alertas" ? (
+              <>
+                <span>Aviso da comunidade, sem verificação</span>
+                <span className="ml-auto">
+                  {alertasVisiveisCamada.length} alertas
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="inline-flex items-center gap-1">
+                  <span className="grid h-3.5 w-3.5 place-items-center rounded-full bg-destructive text-[9px] font-bold text-white">
+                    !
+                  </span>
+                  sem retorno
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <span className="grid h-3.5 w-3.5 place-items-center rounded-full bg-slate-400 text-[9px] font-bold text-white">
+                    ✓
+                  </span>
+                  resolvido
+                </span>
+                <span className="ml-auto">{visible.length} no mapa</span>
+              </>
+            )}
           </div>
 
-          <div className="flex items-center gap-1 border-t border-border/60 px-3 py-2">
+          <div className="flex flex-wrap items-center gap-1 border-t border-border/60 px-3 py-2">
             <span className="mr-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Base
             </span>
@@ -330,18 +434,27 @@ export function OcorrenciasMap({
               ))}
             </div>
             <span className="ml-auto hidden items-center gap-2 text-[11px] text-muted-foreground sm:flex">
-              <span className="inline-flex items-center gap-1">
-                <span className="grid h-3.5 w-3.5 place-items-center rounded-full bg-destructive text-[9px] font-bold text-white">
-                  !
+              {camada === "alertas" ? (
+                <span>
+                  aviso rápido da comunidade, sem verificação · sai do ar em{" "}
+                  {ALERTAS.validadeDias} dias
                 </span>
-                {silentCount} sem retorno
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <span className="grid h-3.5 w-3.5 place-items-center rounded-full bg-slate-400 text-[9px] font-bold text-white">
-                  ✓
-                </span>
-                {resolvedCount} resolvida(s)
-              </span>
+              ) : (
+                <>
+                  <span className="inline-flex items-center gap-1">
+                    <span className="grid h-3.5 w-3.5 place-items-center rounded-full bg-destructive text-[9px] font-bold text-white">
+                      !
+                    </span>
+                    {silentCount} sem retorno
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <span className="grid h-3.5 w-3.5 place-items-center rounded-full bg-slate-400 text-[9px] font-bold text-white">
+                      ✓
+                    </span>
+                    {resolvedCount} resolvida(s)
+                  </span>
+                </>
+              )}
             </span>
           </div>
         </div>
@@ -350,6 +463,61 @@ export function OcorrenciasMap({
       {selected && (
         <DetailPanel report={selected} onClose={() => setSelectedId(null)} />
       )}
+
+      {alertaSelecionado && (
+        <DetalheAlerta
+          alerta={alertaSelecionado}
+          onClose={() => setAlertaId(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ---------- Detalhe de um alerta da comunidade ---------- */
+
+function DetalheAlerta({
+  alerta,
+  onClose,
+}: {
+  alerta: Alerta;
+  onClose: () => void;
+}) {
+  const cat = getCategory(alerta.categoria);
+  return (
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1300] flex justify-center p-2 sm:inset-x-auto sm:bottom-4 sm:right-4 sm:top-4 sm:block sm:w-[360px] sm:p-0">
+      <article className="pointer-events-auto w-full max-w-md rounded-t-3xl border border-border/60 bg-white/95 p-5 shadow-card backdrop-blur sm:max-w-none sm:rounded-3xl">
+        <div className="flex items-start justify-between gap-3">
+          <span
+            className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm"
+            style={{ backgroundColor: cat.color }}
+          >
+            {cat.short}
+          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar alerta"
+            className="grid h-7 w-7 place-items-center rounded-full bg-secondary text-primary transition hover:bg-background"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <h3 className="mt-3 font-display text-lg font-semibold leading-snug text-primary">
+          {alerta.titulo}
+        </h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {alerta.referencia || "sem ponto de referência"} · há{" "}
+          {daysSince(alerta.criadoEm)} dia(s)
+        </p>
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+          {alerta.descricao}
+        </p>
+        <p className="mt-3 rounded-xl bg-sand px-3 py-2 text-[11px] leading-relaxed text-foreground/80">
+          Aviso enviado pela comunidade, sem verificação prévia. Sai do ar em{" "}
+          {ALERTAS.validadeDias} dias.
+        </p>
+      </article>
     </div>
   );
 }
@@ -410,7 +578,7 @@ function DetailPanel({ report, onClose }: { report: Report; onClose: () => void 
             <ReportTrail report={report} />
           </div>
           <Button asChild variant="ocean" size="sm" className="mt-4">
-            <Link to="/denuncias?aba=registrar">
+            <Link to="/denunciar">
               <Plus className="h-4 w-4" />
               Denunciar algo parecido
             </Link>

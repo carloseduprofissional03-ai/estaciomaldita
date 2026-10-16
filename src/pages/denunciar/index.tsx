@@ -24,7 +24,7 @@ export default function Denunciar() {
             protocolo e contagem dos dias de espera. Viu algo acontecendo agora e
             quer avisar rápido? Use o{" "}
             <Link
-              to="/denuncias?aba=alertas"
+              to="/denuncias"
               className="font-semibold text-primary underline underline-offset-2"
             >
               mapa de alerta

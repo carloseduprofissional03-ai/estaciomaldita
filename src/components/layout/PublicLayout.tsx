@@ -11,14 +11,11 @@ const NAV = [{
   to: "/denuncias",
   label: "Denúncias"
 }, {
-  to: "/ilha",
-  label: "A Ilha"
-}, {
   to: "/voluntariado",
   label: "Voluntariado"
 }, {
   to: "/noticias",
-  label: "Notícias e dados"
+  label: "Notícias"
 }];
 const COLUNAS = [{
   titulo: "Navegue",
@@ -29,28 +26,28 @@ const COLUNAS = [{
     to: "/denuncias",
     label: "Denúncias e alertas"
   }, {
-    to: "/ilha",
-    label: "A Ilha: avisos e instituições"
-  }, {
     to: "/voluntariado",
     label: "Voluntariado"
   }, {
     to: "/noticias",
     label: "Notícias e galeria"
+  }, {
+    to: "/ilha",
+    label: "A Ilha: avisos e instituições"
   }]
 }, {
   titulo: "Participe",
   links: [{
-    to: "/denuncias?aba=registrar",
+    to: "/denunciar",
     label: "Fazer uma denúncia"
   }, {
-    to: "/denuncias?aba=alertas",
+    to: "/denuncias",
     label: "Enviar um alerta"
   }, {
     to: "/ilha?aba=avisos",
     label: "Publicar um aviso"
   }, {
-    to: "/noticias?aba=galeria",
+    to: "/noticias",
     label: "Enviar uma foto"
   }, {
     to: "/voluntariado",
@@ -59,14 +56,14 @@ const COLUNAS = [{
 }, {
   titulo: "Território",
   links: [{
-    to: "/mapa",
-    label: "Mapa em tela cheia"
+    to: "/denuncias",
+    label: "Mapa do território"
+  }, {
+    to: "/noticias",
+    label: "Indicadores e resultados"
   }, {
     to: "/ilha?aba=instituicoes",
     label: "Instituições e ONGs"
-  }, {
-    to: "/impacto",
-    label: "Impacto e relatórios"
   }]
 }];
 export function PublicLayout() {
@@ -101,7 +98,7 @@ export function PublicLayout() {
 
           <div className="flex items-center gap-2">
             <Button asChild variant="leaf" className="hidden md:inline-flex">
-              <Link to="/denuncias?aba=registrar">Denunciar</Link>
+              <Link to="/denunciar">Denunciar</Link>
             </Button>
             <button type="button" aria-label="Abrir menu" onClick={() => setOpen(v => !v)} className="grid h-10 w-10 place-items-center rounded-full text-primary transition hover:bg-secondary lg:hidden">
               {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -117,7 +114,7 @@ export function PublicLayout() {
                   {item.label}
                 </NavLink>)}
               <Button asChild variant="leaf" className="mt-2">
-                <Link to="/denuncias?aba=registrar">Fazer uma denúncia</Link>
+                <Link to="/denunciar">Fazer uma denúncia</Link>
               </Button>
             </nav>
           </div>}

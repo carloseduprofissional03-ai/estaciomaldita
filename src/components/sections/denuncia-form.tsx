@@ -153,7 +153,7 @@ export function DenunciaForm() {
             Enviar outra denúncia
           </Button>
           <Button asChild variant="outline">
-            <Link to="/denuncias?aba=mapa">Ver o mapa</Link>
+            <Link to="/denuncias">Ver o mapa</Link>
           </Button>
         </div>
       </div>

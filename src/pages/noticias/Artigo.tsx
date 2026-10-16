@@ -88,7 +88,7 @@ export default function ArtigoNoticia() {
           </p>
           <div className="mt-4 flex flex-wrap justify-center gap-3">
             <Button asChild variant="leaf">
-              <Link to="/denuncias?aba=registrar">Fazer uma denúncia</Link>
+              <Link to="/denunciar">Fazer uma denúncia</Link>
             </Button>
             <Button asChild variant="outline">
               <Link to="/voluntariado">Ver mutirões</Link>

@@ -63,8 +63,8 @@ export default function Ilha() {
           <div className="mt-6 flex flex-wrap gap-2">
             {[
               { to: "/denuncias", label: "Denúncias e alertas" },
-              { to: "/denuncias?aba=alertas", label: "Alertas ativos" },
-              { to: "/noticias?aba=galeria", label: "Galeria de fotos" },
+              { to: "/denuncias", label: "Alertas ativos" },
+              { to: "/noticias", label: "Galeria de fotos" },
               { to: "/voluntariado", label: "Mutirões e voluntariado" },
             ].map((l) => (
               <Link
