@@ -113,15 +113,15 @@ export function PublicLayout() {
 
           <div className="flex items-center gap-2">
             <Button asChild variant="leaf" className="hidden md:inline-flex">
-              <Link to="/denuncias?aba=registrar">Denunciar</Link>
+              
             </Button>
-            <button type="button" aria-label="Abrir menu" onClick={() => setOpen(v => !v)}               className="grid h-10 w-10 place-items-center rounded-full text-primary transition hover:bg-secondary xl:hidden">
+            <button type="button" aria-label="Abrir menu" onClick={() => setOpen(v => !v)} className="grid h-10 w-10 place-items-center rounded-full text-primary transition hover:bg-secondary xl:hidden">
               {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
         </div>
 
-        {open &&           <div className="border-t border-border/60 bg-background xl:hidden">
+        {open && <div className="border-t border-border/60 bg-background xl:hidden">
             <nav className="mx-auto flex w-full max-w-7xl flex-col gap-1 px-4 py-3 sm:px-6">
               {NAV.map(item => <NavLink key={item.to} to={item.to} end={item.to === "/"} className={({
             isActive
