@@ -111,14 +111,11 @@ export function PublicLayout() {
               </NavLink>)}
           </nav>
           {/* Dica de rolagem: as abas seguintes ficam acessíveis para a direita */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 right-2 hidden w-10 bg-gradient-to-l from-background via-background/70 to-transparent md:block lg:right-28 xl:hidden"
-          />
+          <div aria-hidden className="pointer-events-none absolute inset-y-0 right-2 hidden w-10 bg-gradient-to-l from-background via-background/70 to-transparent md:block lg:right-28 xl:hidden" />
 
           <div className="flex shrink-0 items-center gap-2">
             <Button asChild variant="leaf" className="hidden lg:inline-flex">
-              <Link to="/denuncias?aba=registrar">Denunciar</Link>
+              
             </Button>
             <button type="button" aria-label="Abrir menu" onClick={() => setOpen(v => !v)} className="grid h-10 w-10 place-items-center rounded-full text-primary transition hover:bg-secondary md:hidden">
               {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
