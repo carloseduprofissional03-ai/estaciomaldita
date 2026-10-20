@@ -14,6 +14,12 @@ const NAV = [{
   to: "/ilha",
   label: "A Ilha"
 }, {
+  to: "/mangue",
+  label: "Mangue & Comunidade"
+}, {
+  to: "/visita",
+  label: "Agendar Visita"
+}, {
   to: "/voluntariado",
   label: "Voluntariado"
 }, {
@@ -32,6 +38,9 @@ const COLUNAS = [{
     to: "/ilha",
     label: "A Ilha: avisos e instituições"
   }, {
+    to: "/mangue",
+    label: "Mangue & Comunidade"
+  }, {
     to: "/voluntariado",
     label: "Voluntariado"
   }, {
@@ -46,6 +55,9 @@ const COLUNAS = [{
   }, {
     to: "/denuncias?aba=alertas",
     label: "Enviar um alerta"
+  }, {
+    to: "/visita",
+    label: "Agendar uma visita"
   }, {
     to: "/ilha?aba=avisos",
     label: "Publicar um aviso"
@@ -91,10 +103,10 @@ export function PublicLayout() {
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-0.5 lg:flex">
+          <nav className="hidden items-center gap-0.5 xl:flex">
             {NAV.map(item => <NavLink key={item.to} to={item.to} end={item.to === "/"} className={({
             isActive
-          }) => cn("rounded-full px-4 py-2 text-sm font-medium transition-colors", isActive ? "bg-ocean-soft text-primary" : "text-muted-foreground hover:bg-secondary hover:text-primary")}>
+          }) => cn("whitespace-nowrap rounded-full px-3 py-2 text-[13px] font-medium transition-colors", isActive ? "bg-ocean-soft text-primary" : "text-muted-foreground hover:bg-secondary hover:text-primary")}>
                 {item.label}
               </NavLink>)}
           </nav>
@@ -103,13 +115,13 @@ export function PublicLayout() {
             <Button asChild variant="leaf" className="hidden md:inline-flex">
               <Link to="/denuncias?aba=registrar">Denunciar</Link>
             </Button>
-            <button type="button" aria-label="Abrir menu" onClick={() => setOpen(v => !v)} className="grid h-10 w-10 place-items-center rounded-full text-primary transition hover:bg-secondary lg:hidden">
+            <button type="button" aria-label="Abrir menu" onClick={() => setOpen(v => !v)}               className="grid h-10 w-10 place-items-center rounded-full text-primary transition hover:bg-secondary xl:hidden">
               {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
         </div>
 
-        {open && <div className="border-t border-border/60 bg-background lg:hidden">
+        {open &&           <div className="border-t border-border/60 bg-background xl:hidden">
             <nav className="mx-auto flex w-full max-w-7xl flex-col gap-1 px-4 py-3 sm:px-6">
               {NAV.map(item => <NavLink key={item.to} to={item.to} end={item.to === "/"} className={({
             isActive

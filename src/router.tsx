@@ -4,6 +4,8 @@ import NotFound from "./pages/NotFound";
 import Mapa from "./pages/mapa";
 import Alertas from "./pages/alertas";
 import Ilha from "./pages/ilha";
+import MangueComunidade from "./pages/mangue";
+import Visita from "./pages/visita";
 import Denunciar from "./pages/denunciar";
 import Denuncias from "./pages/denuncias";
 import Voluntariado from "./pages/voluntariado";
@@ -23,6 +25,8 @@ export const routers = [
       { path: "/mapa", name: "mapa", element: <Mapa /> },
       { path: "/alertas", name: "alertas", element: <Alertas /> },
       { path: "/ilha", name: "ilha", element: <Ilha /> },
+      { path: "/mangue", name: "mangue", element: <MangueComunidade /> },
+      { path: "/visita", name: "visita", element: <Visita /> },
       { path: "/voluntariado", name: "voluntariado", element: <Voluntariado /> },
       { path: "/noticias", name: "noticias", element: <Noticias /> },
       { path: "/noticias/:id", name: "noticia", element: <ArtigoNoticia /> },
