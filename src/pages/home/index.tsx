@@ -89,9 +89,9 @@ export default function Home() {
             <Droplets className="h-3.5 w-3.5 text-lagoon" />
             Ilha de Deus, Recife (PE)
           </span>
-          <h1 className="animate-rise animate-rise-1 mx-auto mt-6 max-w-4xl text-balance font-display text-4xl font-extrabold leading-[1.1] tracking-tight text-primary sm:text-5xl lg:text-6xl">
-            MANGUETOWN VIVA{" "}
-            <span className="text-lagoon">Mangue & Comunidade.</span>
+          <h1 className="animate-rise animate-rise-1 mx-auto mt-6 max-w-4xl font-display text-4xl font-extrabold leading-[1.1] tracking-tight text-primary sm:text-5xl lg:text-6xl">
+            MANGUETOWN VIVA
+            <span className="mt-1 block text-lagoon">Mangue &amp; Comunidade.</span>
           </h1>
           <p className="animate-rise animate-rise-2 mx-auto mt-5 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">{"Um projeto comunit\xE1rio que une os moradores da Ilha de Deus na integra\xE7\xE3o dos seus saberes culturais, resgate territorial e da fiscaliza\xE7\xE3o ambiental em uma plataforma integrada e colaborativa."}</p>
           <div className="animate-rise animate-rise-3 mt-8 flex flex-wrap items-center justify-center gap-3">
