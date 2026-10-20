@@ -92,8 +92,8 @@ export function PublicLayout() {
   }, [pathname]);
   return <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-40 border-b border-border/70 bg-background">
-        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
-          <Link to="/" className="group flex min-w-0 items-center gap-2.5">
+        <div className="relative mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
+          <Link to="/" className="group flex min-w-0 shrink-0 items-center gap-2.5">
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-lagoon to-leaf text-white shadow-sm transition-transform group-hover:scale-105">
               <Droplets className="h-5 w-5" />
             </span>
@@ -103,25 +103,30 @@ export function PublicLayout() {
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-0.5 xl:flex">
+          <nav className="hidden min-w-0 flex-1 items-center gap-0.5 overflow-x-auto md:flex md:justify-start xl:justify-center [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {NAV.map(item => <NavLink key={item.to} to={item.to} end={item.to === "/"} className={({
             isActive
-          }) => cn("whitespace-nowrap rounded-full px-3 py-2 text-[13px] font-medium transition-colors", isActive ? "bg-ocean-soft text-primary" : "text-muted-foreground hover:bg-secondary hover:text-primary")}>
+          }) => cn("shrink-0 whitespace-nowrap rounded-full px-2.5 py-2 text-[12.5px] font-medium transition-colors xl:px-3 xl:text-[13px]", isActive ? "bg-ocean-soft text-primary" : "text-muted-foreground hover:bg-secondary hover:text-primary")}>
                 {item.label}
               </NavLink>)}
           </nav>
+          {/* Dica de rolagem: as abas seguintes ficam acessíveis para a direita */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 right-2 hidden w-10 bg-gradient-to-l from-background via-background/70 to-transparent md:block lg:right-28 xl:hidden"
+          />
 
-          <div className="flex items-center gap-2">
-            <Button asChild variant="leaf" className="hidden md:inline-flex">
-              
+          <div className="flex shrink-0 items-center gap-2">
+            <Button asChild variant="leaf" className="hidden lg:inline-flex">
+              <Link to="/denuncias?aba=registrar">Denunciar</Link>
             </Button>
-            <button type="button" aria-label="Abrir menu" onClick={() => setOpen(v => !v)} className="grid h-10 w-10 place-items-center rounded-full text-primary transition hover:bg-secondary xl:hidden">
+            <button type="button" aria-label="Abrir menu" onClick={() => setOpen(v => !v)} className="grid h-10 w-10 place-items-center rounded-full text-primary transition hover:bg-secondary md:hidden">
               {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
         </div>
 
-        {open && <div className="border-t border-border/60 bg-background xl:hidden">
+        {open && <div className="border-t border-border/60 bg-background md:hidden">
             <nav className="mx-auto flex w-full max-w-7xl flex-col gap-1 px-4 py-3 sm:px-6">
               {NAV.map(item => <NavLink key={item.to} to={item.to} end={item.to === "/"} className={({
             isActive
