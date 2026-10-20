@@ -275,17 +275,19 @@ export default function Visita() {
             comunidade.
           </p>
         </div>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
           {PASSOS.map((p) => (
             <div
               key={p.titulo}
-              className="rounded-2xl border border-border/70 bg-card p-5 shadow-card"
+              className="rounded-2xl border border-border/70 bg-card p-3.5 shadow-card lg:p-5"
             >
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-ocean-soft text-primary">
-                <p.icon className="h-5 w-5" />
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-ocean-soft text-primary lg:h-10 lg:w-10">
+                <p.icon className="h-4 w-4 lg:h-5 lg:w-5" />
               </span>
-              <h3 className="mt-4 font-semibold text-foreground">{p.titulo}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+              <h3 className="mt-3 text-[13px] font-semibold leading-snug text-foreground lg:mt-4 lg:text-base">
+                {p.titulo}
+              </h3>
+              <p className="mt-1 text-[12px] leading-snug text-muted-foreground lg:text-sm lg:leading-relaxed">
                 {p.texto}
               </p>
             </div>
@@ -305,16 +307,16 @@ export default function Visita() {
               O que a comunidade pede para você saber antes de vir.
             </p>
           </div>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4">
             {INFO_PRATICA.map((i) => (
               <div
                 key={i.titulo}
-                className="rounded-2xl border border-border/70 bg-card p-5 shadow-card"
+                className="rounded-2xl border border-border/70 bg-card p-3.5 shadow-card lg:p-5"
               >
-                <h3 className="font-display text-base font-semibold text-primary">
+                <h3 className="text-[13px] font-semibold leading-snug text-primary lg:font-display lg:text-base">
                   {i.titulo}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                <p className="mt-1.5 text-[12px] leading-snug text-muted-foreground lg:mt-2 lg:text-sm lg:leading-relaxed">
                   {i.texto}
                 </p>
               </div>
