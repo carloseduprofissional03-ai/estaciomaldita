@@ -170,3 +170,31 @@ body,
   width: 100%;
   min-height: 100%;
 }
+
+/*
+ * Sem rolagem lateral: nada deve empurrar a página para a direita.
+ * `clip` evita criar um contêiner de rolagem (o que quebraria o cabeçalho
+ * fixo, ao contrário de `hidden`).
+ */
+html,
+body {
+  overflow-x: clip;
+}
+
+/*
+ * Em celulares e tablets as barras de rolagem ficam ocultas — a rolagem
+ * continua funcionando normalmente com o toque, e as setas dos carrosséis
+ * seguem aparecendo.
+ */
+@media (max-width: 1023px) {
+  html {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+}
