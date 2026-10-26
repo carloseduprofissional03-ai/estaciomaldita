@@ -201,9 +201,9 @@ function EventCard({ event, count }: { event: CleanupEvent; count: number }) {
         <div className="border-t border-border/70 bg-foam/60 px-6 py-5">
           <p className="flex items-start gap-2 text-sm text-foreground/80">
             <Mail className="mt-0.5 h-4 w-4 shrink-0 text-leaf-deep" />
-            <span>
+            <span className="min-w-0 break-words">
               Abrimos o seu aplicativo de e-mail com a inscrição pronta
-              (<b>{TEAM_CONTACT_EMAIL}</b>). <b>É só enviar a mensagem</b> para a
+              (<b className="break-all">{TEAM_CONTACT_EMAIL}</b>). <b>É só enviar a mensagem</b> para a
               equipe confirmar sua vaga.
             </span>
           </p>
