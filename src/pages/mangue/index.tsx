@@ -90,19 +90,36 @@ export default function MangueComunidade() {
                 key={item.id}
                 className="flex h-full flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-card"
               >
-                <div
-                  className="flex h-24 items-end px-5 pb-3"
-                  style={{
-                    background: `linear-gradient(160deg, ${item.cor}22, ${item.cor}66)`,
-                  }}
-                >
-                  <span
-                    className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm"
-                    style={{ backgroundColor: item.cor }}
+                {item.imagemUrl ? (
+                  <div className="relative h-48 w-full overflow-hidden bg-muted">
+                    <img
+                      src={item.imagemUrl}
+                      alt={item.titulo}
+                      className="h-48 w-full object-cover transition duration-300 hover:scale-105"
+                      crossOrigin="anonymous"
+                    />
+                    <span
+                      className="absolute left-3 top-3 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm"
+                      style={{ backgroundColor: item.cor }}
+                    >
+                      {item.etiqueta}
+                    </span>
+                  </div>
+                ) : (
+                  <div
+                    className="flex h-24 items-end px-5 pb-3"
+                    style={{
+                      background: `linear-gradient(160deg, ${item.cor}22, ${item.cor}66)`,
+                    }}
                   >
-                    {item.etiqueta}
-                  </span>
-                </div>
+                    <span
+                      className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm"
+                      style={{ backgroundColor: item.cor }}
+                    >
+                      {item.etiqueta}
+                    </span>
+                  </div>
+                )}
                 <div className="flex flex-1 flex-col p-5">
                   <h3 className="font-display text-lg font-semibold leading-snug text-primary">
                     {item.titulo}

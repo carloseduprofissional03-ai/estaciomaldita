@@ -1,4 +1,5 @@
 import { TEAM_CONTACT_EMAIL } from "./site";
+import { IMG } from "./images";
 
 /*
  * Mangue & Comunidade e Agendar Visita.
@@ -13,8 +14,10 @@ export interface PontoComunidade {
   titulo: string;
   etiqueta: string;
   descricao: string;
-  /** Cor do cabeçalho do card (mesma paleta dos marcadores do mapa). */
+  /** Cor do cabeçalho ou da etiqueta do card. */
   cor: string;
+  /** Caminho ou URL da foto representativa exibida no topo do card. */
+  imagemUrl?: string;
 }
 
 export interface RoteiroVisita {
@@ -34,22 +37,25 @@ export const PONTOS: PontoComunidade[] = [
     descricao:
       "Trilha leve por dentro do mangue com moradores da comunidade, explicando por que o manguezal é o berçário dos peixes e caranguejos da Bacia do Pina.",
     cor: "#2e9e63",
+    imagemUrl: "/images/ponto-manguezal-garca.jpg",
   },
   {
     id: "p2",
     titulo: "Trapiche e foz do canal",
     etiqueta: "Mirante",
     descricao:
-      "Ponto de encontro do projeto e melhor vista do pôr do sol: de lá se vê o canal, o mangue e a cidade ao fundo.",
+      "Ponto de encontro do projeto e melhor vista do pôr do sol: de lá se vê o canal, o mangue e a cidade ao fundo refletidos nas águas da maré.",
     cor: "#2f7fc0",
+    imagemUrl: "/images/ponto-manguezal-sol.jpg",
   },
   {
     id: "p3",
-    titulo: "Campo de futebol e vila",
+    titulo: "Vila e praça da Ilha de Deus",
     etiqueta: "Convivência",
     descricao:
-      "O centro da vida social da ilha: pelada no fim da tarde, cadeira na porta de casa e conversa sobre o que a comunidade precisa.",
+      "O centro da vida social da ilha: casas coloridas, praça circular na beira da água, conversa na porta de casa e a acolhida dos moradores.",
     cor: "#e08a2e",
+    imagemUrl: "/images/ponto-vista-aerea-ilha.jpg",
   },
   {
     id: "p4",
@@ -58,41 +64,46 @@ export const PONTOS: PontoComunidade[] = [
     descricao:
       "Horta cuidada pelas crianças e oficinas de educação ambiental junto ao projeto Da Nascente à Foz.",
     cor: "#7c5cd6",
+    imagemUrl: IMG.reuniao,
   },
   {
     id: "p5",
-    titulo: "Casa de farinha",
+    titulo: "Associação de pescadores e tradição",
     etiqueta: "Cultura",
     descricao:
-      "Onde se aprende o preparo da farinha de mandioca e onde as cozinhas da comunidade se reúnem nos mutirões.",
+      "A pesca e a aquicultura artesanal que sustentam as famílias da comunidade há gerações, preservando a identidade dos trabalhadores das águas.",
     cor: "#c2543f",
+    imagemUrl: "/images/comunidade-associacao-pescadores.jpg",
   },
   {
     id: "p6",
-    titulo: "Caminhos de madeira",
+    titulo: "Caminhos de madeira e palafitas",
     etiqueta: "Paisagem",
     descricao:
-      "As passarelas entre as casas suspensas sobre a água — o jeito próprio de andar na Ilha de Deus.",
+      "As passarelas entre as casas suspensas sobre a água e as canoas tradicionais atracadas — o jeito próprio de viver e navegar na Ilha de Deus.",
     cor: "#1c6b8c",
+    imagemUrl: "/images/ponto-barco-palafitas.jpg",
   },
 ];
 
 export const CULINARIA: PontoComunidade[] = [
   {
     id: "c1",
-    titulo: "Peixada da maré",
+    titulo: "Peixada e peixe frito da maré",
     etiqueta: "Prato principal",
     descricao:
-      "Peixe fresco do canal cozido com pirão, tempero verde e o que a horta do quintal oferece. Prato dos almoços de domingo e dos mutirões.",
+      "Peixe fresco do canal preparado com carinho, servido com salada fresca, pirão e tempero verde da horta. Prato dos almoços de domingo e dos mutirões.",
     cor: "#1c6b8c",
+    imagemUrl: "/images/culinaria-peixe-frito.jpg",
   },
   {
     id: "c2",
-    titulo: "Caranguejo e crustáceos",
+    titulo: "Pescados e crustáceos da APA",
     etiqueta: "Do mangue",
     descricao:
-      "Caranguejo e siri capturados com respeito ao período de defeso e cozidos no tempero da casa. Sabor que vem direto do manguezal.",
+      "Camarão, caranguejo e pescados frescos da Associação de Pescadores e Aquicultores Tradicionais, colhidos com respeito ao defeso e ao ritmo da maré.",
     cor: "#e08a2e",
+    imagemUrl: "/images/comunidade-associacao-pescadores.jpg",
   },
   {
     id: "c3",
@@ -101,6 +112,7 @@ export const CULINARIA: PontoComunidade[] = [
     descricao:
       "Bolo de mandioca, tapioca e coco feitos nas cozinhas da comunidade — os doces que aparecem nas reuniões e nas festas da ilha.",
     cor: "#d1453b",
+    imagemUrl: IMG.reuniao,
   },
   {
     id: "c4",
@@ -109,6 +121,7 @@ export const CULINARIA: PontoComunidade[] = [
     descricao:
       "A mandioca trabalhada do jeito antigo: farinha torrada e beiju quentinho, feitos em mutirão pelas famílias.",
     cor: "#c2543f",
+    imagemUrl: IMG.comunidade,
   },
   {
     id: "c5",
@@ -117,6 +130,7 @@ export const CULINARIA: PontoComunidade[] = [
     descricao:
       "Cuscuz, café, bolo e fruta antes de começar a limpeza do canal. O lanche coletivo é parte do mutirão.",
     cor: "#2e9e63",
+    imagemUrl: IMG.mutirao,
   },
   {
     id: "c6",
@@ -125,33 +139,37 @@ export const CULINARIA: PontoComunidade[] = [
     descricao:
       "Preparo tradicional assado na folha, feito nos quintais quando a pesca do dia rende mais.",
     cor: "#2f7fc0",
+    imagemUrl: "/images/culinaria-peixe-frito.jpg",
   },
 ];
 
 export const ARTESANATO: PontoComunidade[] = [
   {
     id: "a1",
-    titulo: "Fibra de palha, conchas e tecido",
+    titulo: "Fibra de palha, conchas e móbiles",
     etiqueta: "Grupo de artesãs",
     descricao:
-      "Bolsas, cestos e peças de mesa feitas por um coletivo de mulheres da comunidade com material reaproveitado do próprio território.",
+      "Móbiles, filtros dos sonhos, cestos e peças de parede e mesa feitos com palha trançada e conchinhas de marisco colhidas no manguezal.",
     cor: "#e08a2e",
+    imagemUrl: "/images/artesanato-conchas-palha.jpg",
   },
   {
     id: "a2",
-    titulo: "Miniaturas de canoa e palafita",
+    titulo: "Canoas artesanais e miniaturas",
     etiqueta: "Madeira",
     descricao:
-      "Réplicas em madeira das canoas e das casas de palafita da ilha, feitas por moradores que aprenderam o ofício em casa.",
+      "Tradição dos carpinteiros navais da comunidade: canoas de madeira autênticas e réplicas em miniatura das embarcações e palafitas da ilha.",
     cor: "#1c6b8c",
+    imagemUrl: "/images/ponto-barco-palafitas.jpg",
   },
   {
     id: "a3",
     titulo: "Biojoias de sementes e conchas",
     etiqueta: "Acessórios",
     descricao:
-      "Colares, brincos e pulseiras com sementes, conchas e materiais recolhidos sem dano ao mangue.",
+      "Colares, brincos e pulseiras com sementes, conchas e materiais recolhidos com respeito e sem dano ao mangue.",
     cor: "#2e9e63",
+    imagemUrl: "/images/artesanato-conchas-palha.jpg",
   },
   {
     id: "a4",
@@ -160,6 +178,7 @@ export const ARTESANATO: PontoComunidade[] = [
     descricao:
       "Peças de vestir e de casa costuradas a partir de tecido reutilizado — criatividade contra o desperdício.",
     cor: "#7c5cd6",
+    imagemUrl: IMG.comunidade,
   },
   {
     id: "a5",
@@ -168,14 +187,16 @@ export const ARTESANATO: PontoComunidade[] = [
     descricao:
       "Bordados que desenham a paisagem da ilha, o mangue e as histórias contadas pelas moradoras mais antigas.",
     cor: "#d1453b",
+    imagemUrl: IMG.mangue,
   },
   {
     id: "a6",
-    titulo: "Rede de pesca que virou arte",
+    titulo: "Rede de pesca e nós tradicionais",
     etiqueta: "Pesca",
     descricao:
       "Rede, corda e anzol viram peças decorativas na mão de pescadores que conhecem cada nó do ofício.",
     cor: "#c2543f",
+    imagemUrl: "/images/ponto-barco-palafitas.jpg",
   },
 ];
 
